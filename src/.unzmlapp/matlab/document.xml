@@ -1,0 +1,766 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="code"/></w:pPr><w:r><w:t><![CDATA[classdef HEKA_Explorer < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        MainFIgure                   matlab.ui.Figure
+        GridLayout                   matlab.ui.container.GridLayout
+        OptionsPanel                 matlab.ui.container.Panel
+        AppTitle                     matlab.ui.control.Label
+        OptionsGroup                 matlab.ui.container.TabGroup
+        DataOptionsTab               matlab.ui.container.Tab
+        DataLoadingOptionsPanel      matlab.ui.container.Panel
+        LoadDataButton               matlab.ui.control.Button
+        DataFormatButtonGroup        matlab.ui.container.ButtonGroup
+        LoadDATPatchMasterButton     matlab.ui.control.RadioButton
+        LoadMATDataTableButton       matlab.ui.control.RadioButton
+        LoadITXPatchMasterButton     matlab.ui.control.RadioButton
+        LoadMATPatchMasterButton     matlab.ui.control.RadioButton
+        LoadMATITXButton             matlab.ui.control.RadioButton
+        DataConverstionPanel         matlab.ui.container.Panel
+        DataLog                      matlab.ui.control.TextArea
+        ConvertITXtoMATButton        matlab.ui.control.Button
+        ConvertDATtoMATButton        matlab.ui.control.Button
+        ViewOptionsTab               matlab.ui.container.Tab
+        ViewProtocolAndSweepPanel    matlab.ui.container.Panel
+        ProtocolDropDownLabel        matlab.ui.control.Label
+        ViewProtocolSelection        matlab.ui.control.DropDown
+        SweepEditFieldLabel          matlab.ui.control.Label
+        ViewSweepSelection           matlab.ui.control.NumericEditField
+        ViewProtocolNameChanger      matlab.ui.control.Button
+        ViewPreviousProtocol         matlab.ui.control.Button
+        ViewNextProtocol             matlab.ui.control.Button
+        ViewAllSweep                 matlab.ui.control.CheckBox
+        VIewPreviousSweep            matlab.ui.control.Button
+        ViewNextSweep                matlab.ui.control.Button
+        ViewPlotPropertiesPanel      matlab.ui.container.Panel
+        NunberDropDownLabel          matlab.ui.control.Label
+        ViewPlotNumber               matlab.ui.control.DropDown
+        HeightratioEditFieldLabel    matlab.ui.control.Label
+        ViewPlotHeighRatio           matlab.ui.control.NumericEditField
+        ViewVariableSelectionPanel   matlab.ui.container.Panel
+        ViewVariableGrid             matlab.ui.container.GridLayout
+        ViewVariable_1               matlab.ui.control.DropDown
+        ViewVariable_2               matlab.ui.control.DropDown
+        ViewVariable_3               matlab.ui.control.DropDown
+        ViewVariable_4               matlab.ui.control.DropDown
+        ViewVariable_5               matlab.ui.control.DropDown
+        ViewVariable_6               matlab.ui.control.DropDown
+        ViewVariable_7               matlab.ui.control.DropDown
+        ViewVariable_8               matlab.ui.control.DropDown
+        ViewVariable_9               matlab.ui.control.DropDown
+        ViewVariablePropertiesPanel  matlab.ui.container.Panel
+        ViewVariablePropertiesGridTemplate  matlab.ui.container.GridLayout
+        ViewXAxispropertiesPanel     matlab.ui.container.Panel
+        VIewShowAllXAxis             matlab.ui.control.StateButton
+        XLimEditFieldLabel           matlab.ui.control.Label
+        ViewXLim                     matlab.ui.control.NumericEditField
+        ViewSaveOptionsPanel         matlab.ui.container.Panel
+        ViewSaveSelectedOnly         matlab.ui.control.CheckBox
+        ViewSaveDataFormat           matlab.ui.container.ButtonGroup
+        ViewSaveMatButton            matlab.ui.control.RadioButton
+        ViewLog                      matlab.ui.control.TextArea
+        ViewSaveCSVButton            matlab.ui.control.RadioButton
+        AnalysisLog                  matlab.ui.control.TextArea
+        ViewSaveDataButton           matlab.ui.control.Button
+        ViewScreenshotButton         matlab.ui.control.Button
+        AnalysisOptionsTab           matlab.ui.container.Tab
+        OutputsGroup                 matlab.ui.container.TabGroup
+        ViewOutputsTab               matlab.ui.container.Tab
+        ViewFigureBoundary           matlab.ui.container.Panel
+        AnalysisOutputsTab           matlab.ui.container.Tab
+        AnalysisFigureBoundary       matlab.ui.container.Panel
+        DataInformation              matlab.ui.control.EditField
+        OutputsPanel                 matlab.ui.container.Panel
+    end
+
+    % Properties that correspond to apps with auto-reflow
+    properties (Access = private)
+        onePanelWidth = 576;
+    end
+
+    properties (Access = public)
+        % TODO: turn these into PRIVATE after development
+        view_max_numplots = 9;          % maximum number of allowed plots in View
+        current_data = struct;          % currently plotted data
+        current_settings = struct;      % current settings/options
+        current_variables = struct;     % current variables
+    end
+    
+    properties (Access = public)
+        % TODO: decide on whether this should be publicly accessible or
+        % turned to private
+        data_table;                     % experiment data table
+    end
+    
+    methods (Access = private)
+        
+        function [file_format, file_source] = getLoadDataFormat(app)
+            selected_format = app.DataFormatButtonGroup.SelectedObject.Text;
+            
+            switch upper(selected_format)
+                case upper('dat (from PatchMaster)')
+                    file_format = 'dat';
+                    file_source = 'PATCHMASTER::DAT';
+                case upper('mat (data table)')
+                    file_format = 'mat';
+                    file_source = 'PATCHMASTER::DAT->HEKAEXPLORER::MAT';
+                case upper('itx (from PatchMaster)')
+                    file_format = 'itx';
+                    file_source = 'PATCHMASTER::ITX';
+                case upper('mat (from PatchMaster)')
+                    file_format = 'mat';
+                    file_source = 'PATCHMASTER::MAT';
+                case upper('mat (from itx)')
+                    file_format = 'mat';
+                    file_source = 'PATCHMASTER::ITX->HEKAEXPLORER::MAT';
+                otherwise
+                    app.updateLog('DataLog', 'WARNING', ...
+                        sprintf('%s is not an acceptable data format option. Nothing will be loaded.', selected_format));
+                    file_format = 'INVALID';
+                    file_source = 'INVALID';
+            end
+        end
+        
+        function updateLog(app, componentName, tag, newMessage)
+            tag = upper(tag); 
+            app.(componentName).Value = [app.(componentName).Value; {sprintf('%s:\t%s', tag, newMessage)}];
+            switch tag 
+                case {'WARNING', 'WARN'}
+                    uialert(app.MainFIgure, newMessage, 'Icon', 'warning'); 
+                case {'ERROR', 'ERR'}
+                    uialert(app.MainFIgure, newMessage, 'Icon', 'error'); 
+                otherwise, return; 
+            end
+        end
+        
+        function initializeAfterLoadingData(app)
+            
+            selected_protocol_value = 1;
+            app.current_settings.available_protocols = cellfun(@(ind_rec, stim_name) ...
+                sprintf('%02d: %s',ind_rec,stim_name), ...
+                num2cell(app.data_table.Rec), app.data_table.Stimulus, ...
+                'uni', 0);
+            app.current_settings.original_available_protocols = app.current_settings.available_protocols;
+            app.ProtocolSelectionMenu.String = app.current_settings.available_protocols;
+            app.ProtocolSelectionMenu.Value = selected_protocol_value;
+            
+            app.NumberOfVariableMenu.String = 1:app.max_numplots;
+            app.ProtocolSelectionMenuChanged;
+            
+        end
+        
+        function switchToViewTabs(app)            
+            app.OptionsGroup.SelectedTab = app.ViewOptionsTab;
+            app.OutputsGroup.SelectedTab = app.ViewOutputsTab; 
+        end
+        
+        function switchToAnalysTabs(app)            
+            app.OptionsGroup.SelectedTab = app.AnalysisOptionsTab;
+            app.OutputsGroup.SelectedTab = app.AnalysisOutputsTab; 
+        end
+    end
+    
+    
+    
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Button pushed function: LoadDataButton
+        function LoadDataButtonPushed(app, event)
+            % Prompt get file
+            if ~isfield(app.current_settings, 'file_path'), app.current_settings.file_path = pwd; end
+            file_path = app.current_settings.file_path;
+            
+            [file_format, file_source] = app.getLoadDataFormat;
+            [file_name, file_path] = uigetfile(fullfile(file_path,['*.' file_format]), ...
+                sprintf('Select a %s file to read', upper(file_format)));
+            
+            if file_name == 0, return; end
+            
+            app.current_settings.file_path = file_path;
+            app.current_settings.file_name = file_name;
+            
+            % Update log
+            app.updateLog('DataLog', 'DATA', 'wait for it ...');
+            pause(0.001);
+            
+            % Obtain data table
+            full_filename = fullfile(file_path, file_name);
+            switch file_source
+                case 'PATCHMASTER::DAT'
+                    DataAlreadyZeroed_inputoptions = {'I know they ARE',...
+                        'I know they are NOT', ...
+                        'Unsure but let''s go with YES', ...
+                        'Unsure but let''s go with NO'};
+                    DataAlreadyZeroed_answer = listdlg('PromptString', ...
+                        'Do you know if data have already been zeroed?', ...
+                        'SelectionMode', 'single', ...
+                        'ListString', DataAlreadyZeroed_inputoptions);
+                    DataAlreadyZeroed_answer = DataAlreadyZeroed_answer == 1 || DataAlreadyZeroed_answer == 3;
+                    
+                    try
+                        tmp_data = HEKA_Importer(full_filename, 'DataAlreadyZeroed', DataAlreadyZeroed_answer);
+                    catch
+                        app.updateLog('DataLog', 'ERROR', sprintf('HEKA_Importer could not load %s.', full_filename));
+                    end
+                    
+                    if isempty(tmp_data.RecTable)
+                        app.updateLog('DataLog', 'WARNING', 'The data table was empty. Nothing will be loaded in.');
+                        return;
+                    end
+                    app.data_table = tmp_data.RecTable;
+                    
+                case 'PATCHMASTER::DAT->HEKAEXPLORER::MAT'
+                    tmp_data = load(full_filename, 'data_table');
+                    app.data_table = tmp_data.data_table;
+                otherwise
+                    app.updateLog('DataLog', 'WARNING', 'The file source option is either invalid or unimplemented for reading. Nothing will be loaded in.');
+            end
+            
+            
+            app.DataInformation.Value = file_name;
+            app.updateLog('DataLog', 'DATA', sprintf('File "%s" loaded.', full_filename));
+            app.updateLog('DataLog', 'TIPS', 'Now you can click on the other tabs to toy around.');
+            
+            % Initialize
+            app.initializeAfterLoadingData;
+            app.switchToViewTabs; 
+            
+        end
+
+        % Button pushed function: ConvertDATtoMATButton
+        function ConvertDATtoMATButtonPushed(app, event)
+            
+            if isempty(app.data_table) || isempty(app.current_settings.file_path)
+                app.SaveMATTableText.String = 'no data to save';
+                return;
+            end
+            
+            [save_datatable_name, save_datatable_path] = uiputfile('.mat', ...
+                'Select a home for the MAT data table file', ...
+                sprintf('%s.mat', fullfile(app.current_settings.file_path, app.current_settings.file_name(1:end-4))));
+            
+            if save_datatable_name == 0, return; end
+            save_filename = fullfile(save_datatable_path, save_datatable_name);
+            
+            data_table = app.data_table;
+            save(save_filename, 'data_table');
+            
+        end
+
+        % Changes arrangement of the app based on UIFigure width
+        function updateAppLayout(app, event)
+            currentFigureWidth = app.MainFIgure.Position(3);
+            if(currentFigureWidth <= app.onePanelWidth)
+                % Change to a 2x1 grid
+                app.GridLayout.RowHeight = {866, 866};
+                app.GridLayout.ColumnWidth = {'1x'};
+                app.OutputsPanel.Layout.Row = 2;
+                app.OutputsPanel.Layout.Column = 1;
+            else
+                % Change to a 1x2 grid
+                app.GridLayout.RowHeight = {'1x'};
+                app.GridLayout.ColumnWidth = {370, '1x'};
+                app.OutputsPanel.Layout.Row = 1;
+                app.OutputsPanel.Layout.Column = 2;
+            end
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create MainFIgure and hide until all components are created
+            app.MainFIgure = uifigure('Visible', 'off');
+            app.MainFIgure.AutoResizeChildren = 'off';
+            app.MainFIgure.Position = [100 100 1338 866];
+            app.MainFIgure.Name = 'UI Figure';
+            app.MainFIgure.SizeChangedFcn = createCallbackFcn(app, @updateAppLayout, true);
+
+            % Create GridLayout
+            app.GridLayout = uigridlayout(app.MainFIgure);
+            app.GridLayout.ColumnWidth = {370, '1x'};
+            app.GridLayout.RowHeight = {'1x'};
+            app.GridLayout.ColumnSpacing = 0;
+            app.GridLayout.RowSpacing = 0;
+            app.GridLayout.Padding = [0 0 0 0];
+            app.GridLayout.Scrollable = 'on';
+
+            % Create OptionsPanel
+            app.OptionsPanel = uipanel(app.GridLayout);
+            app.OptionsPanel.Layout.Row = 1;
+            app.OptionsPanel.Layout.Column = 1;
+            app.OptionsPanel.Scrollable = 'on';
+
+            % Create AppTitle
+            app.AppTitle = uilabel(app.OptionsPanel);
+            app.AppTitle.FontSize = 20;
+            app.AppTitle.Position = [14 824 298 25];
+            app.AppTitle.Text = 'PatchMaster recordings explorer';
+
+            % Create DataInformation
+            app.DataInformation = uieditfield(app.OptionsPanel, 'text');
+            app.DataInformation.HorizontalAlignment = 'center';
+            app.DataInformation.Enable = 'off';
+            app.DataInformation.Position = [14 794 252 22];
+            app.DataInformation.Value = '(no data loaded yet)';
+
+            % Create OptionsGroup
+            app.OptionsGroup = uitabgroup(app.OptionsPanel);
+            app.OptionsGroup.Position = [13 14 346 768];
+
+            % Create DataOptionsTab
+            app.DataOptionsTab = uitab(app.OptionsGroup);
+            app.DataOptionsTab.Title = 'Data';
+            app.DataOptionsTab.Scrollable = 'on';
+
+            % Create DataLoadingOptionsPanel
+            app.DataLoadingOptionsPanel = uipanel(app.DataOptionsTab);
+            app.DataLoadingOptionsPanel.Position = [12 523 205 203];
+
+            % Create LoadDataButton
+            app.LoadDataButton = uibutton(app.DataLoadingOptionsPanel, 'push');
+            app.LoadDataButton.ButtonPushedFcn = createCallbackFcn(app, @LoadDataButtonPushed, true);
+            app.LoadDataButton.Tooltip = {'Click here and choose the file format to load the data'};
+            app.LoadDataButton.Position = [16 169 100 22];
+            app.LoadDataButton.Text = 'Load data';
+
+            % Create DataFormatButtonGroup
+            app.DataFormatButtonGroup = uibuttongroup(app.DataLoadingOptionsPanel);
+            app.DataFormatButtonGroup.Tooltip = {'choose data format (the greyed ones are unimplmented)'; ''};
+            app.DataFormatButtonGroup.BorderType = 'none';
+            app.DataFormatButtonGroup.Title = 'Data format';
+            app.DataFormatButtonGroup.Position = [16 8 166 144];
+
+            % Create LoadDATPatchMasterButton
+            app.LoadDATPatchMasterButton = uiradiobutton(app.DataFormatButtonGroup);
+            app.LoadDATPatchMasterButton.Tooltip = {'.dat files generated for the entire experiment from PatchMaster'};
+            app.LoadDATPatchMasterButton.Text = 'dat (from PatchMaster)';
+            app.LoadDATPatchMasterButton.Position = [11 99 145 22];
+            app.LoadDATPatchMasterButton.Value = true;
+
+            % Create LoadMATDataTableButton
+            app.LoadMATDataTableButton = uiradiobutton(app.DataFormatButtonGroup);
+            app.LoadMATDataTableButton.Tooltip = {'.mat files generated by this program that had the data table, extracted from the HEKA_Importer'};
+            app.LoadMATDataTableButton.Text = 'mat (data table)';
+            app.LoadMATDataTableButton.Position = [11 76 106 22];
+
+            % Create LoadITXPatchMasterButton
+            app.LoadITXPatchMasterButton = uiradiobutton(app.DataFormatButtonGroup);
+            app.LoadITXPatchMasterButton.Enable = 'off';
+            app.LoadITXPatchMasterButton.Tooltip = {'.itx files from PatchMaster for single protocol'; ''};
+            app.LoadITXPatchMasterButton.Text = 'itx (from PatchMaster)';
+            app.LoadITXPatchMasterButton.Position = [11 53 140 22];
+
+            % Create LoadMATPatchMasterButton
+            app.LoadMATPatchMasterButton = uiradiobutton(app.DataFormatButtonGroup);
+            app.LoadMATPatchMasterButton.Enable = 'off';
+            app.LoadMATPatchMasterButton.Tooltip = {'.mat files from PatchMaster for single protocol'};
+            app.LoadMATPatchMasterButton.Text = 'mat (from PatchMaster)';
+            app.LoadMATPatchMasterButton.Position = [11 31 148 22];
+
+            % Create LoadMATITXButton
+            app.LoadMATITXButton = uiradiobutton(app.DataFormatButtonGroup);
+            app.LoadMATITXButton.Enable = 'off';
+            app.LoadMATITXButton.Tooltip = {'.mat files converted from .itx files'};
+            app.LoadMATITXButton.Text = 'mat (from itx)';
+            app.LoadMATITXButton.Position = [11 9 92 22];
+
+            % Create DataConverstionPanel
+            app.DataConverstionPanel = uipanel(app.DataOptionsTab);
+            app.DataConverstionPanel.TitlePosition = 'centertop';
+            app.DataConverstionPanel.Title = 'Conversion utilities';
+            app.DataConverstionPanel.FontWeight = 'bold';
+            app.DataConverstionPanel.Position = [12 405 205 101];
+
+            % Create ConvertITXtoMATButton
+            app.ConvertITXtoMATButton = uibutton(app.DataConverstionPanel, 'push');
+            app.ConvertITXtoMATButton.Enable = 'off';
+            app.ConvertITXtoMATButton.Tooltip = {'Convert the .itx files to.mat files for easy reading. Can do batch mode as well.'};
+            app.ConvertITXtoMATButton.Position = [33 15 140 22];
+            app.ConvertITXtoMATButton.Text = 'Convert ITX to MAT';
+
+            % Create ConvertDATtoMATButton
+            app.ConvertDATtoMATButton = uibutton(app.DataConverstionPanel, 'push');
+            app.ConvertDATtoMATButton.ButtonPushedFcn = createCallbackFcn(app, @ConvertDATtoMATButtonPushed, true);
+            app.ConvertDATtoMATButton.Tooltip = {'Convert the PatchMaster .dat files to.mat files for easy reading (essentially from HEKA Importer). Can do batch mode as well.'};
+            app.ConvertDATtoMATButton.Position = [33 47 140 22];
+            app.ConvertDATtoMATButton.Text = 'Convert DAT to MAT';
+
+            % Create DataLog
+            app.DataLog = uitextarea(app.DataOptionsTab);
+            app.DataLog.Enable = 'off';
+            app.DataLog.Position = [12 10 324 115];
+            app.DataLog.Value = {'Log'};
+
+            % Create ViewOptionsTab
+            app.ViewOptionsTab = uitab(app.OptionsGroup);
+            app.ViewOptionsTab.Title = 'View options';
+            app.ViewOptionsTab.Scrollable = 'on';
+
+            % Create ViewProtocolAndSweepPanel
+            app.ViewProtocolAndSweepPanel = uipanel(app.ViewOptionsTab);
+            app.ViewProtocolAndSweepPanel.Title = 'Protocol and sweep selection';
+            app.ViewProtocolAndSweepPanel.FontWeight = 'bold';
+            app.ViewProtocolAndSweepPanel.Position = [17 644 323 85];
+
+            % Create ProtocolDropDownLabel
+            app.ProtocolDropDownLabel = uilabel(app.ViewProtocolAndSweepPanel);
+            app.ProtocolDropDownLabel.HorizontalAlignment = 'right';
+            app.ProtocolDropDownLabel.Enable = 'off';
+            app.ProtocolDropDownLabel.Position = [5 38 50 22];
+            app.ProtocolDropDownLabel.Text = 'Protocol';
+
+            % Create ViewProtocolSelection
+            app.ViewProtocolSelection = uidropdown(app.ViewProtocolAndSweepPanel);
+            app.ViewProtocolSelection.Items = {};
+            app.ViewProtocolSelection.Enable = 'off';
+            app.ViewProtocolSelection.Tooltip = {'Select a protocol'};
+            app.ViewProtocolSelection.Position = [63 38 145 22];
+            app.ViewProtocolSelection.Value = {};
+
+            % Create SweepEditFieldLabel
+            app.SweepEditFieldLabel = uilabel(app.ViewProtocolAndSweepPanel);
+            app.SweepEditFieldLabel.HorizontalAlignment = 'right';
+            app.SweepEditFieldLabel.Enable = 'off';
+            app.SweepEditFieldLabel.Position = [13 10 42 22];
+            app.SweepEditFieldLabel.Text = 'Sweep';
+
+            % Create ViewSweepSelection
+            app.ViewSweepSelection = uieditfield(app.ViewProtocolAndSweepPanel, 'numeric');
+            app.ViewSweepSelection.Enable = 'off';
+            app.ViewSweepSelection.Position = [63 10 145 22];
+
+            % Create ViewProtocolNameChanger
+            app.ViewProtocolNameChanger = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewProtocolNameChanger.Enable = 'off';
+            app.ViewProtocolNameChanger.Tooltip = {'Click here to change the name of the protocol'};
+            app.ViewProtocolNameChanger.Position = [220 38 35 22];
+            app.ViewProtocolNameChanger.Text = '';
+
+            % Create ViewPreviousProtocol
+            app.ViewPreviousProtocol = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewPreviousProtocol.IconAlignment = 'center';
+            app.ViewPreviousProtocol.FontSize = 14;
+            app.ViewPreviousProtocol.Enable = 'off';
+            app.ViewPreviousProtocol.Tooltip = {'Previous protocol'};
+            app.ViewPreviousProtocol.Position = [264 38 25 22];
+            app.ViewPreviousProtocol.Text = '◀';
+
+            % Create ViewNextProtocol
+            app.ViewNextProtocol = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewNextProtocol.IconAlignment = 'center';
+            app.ViewNextProtocol.FontSize = 14;
+            app.ViewNextProtocol.Enable = 'off';
+            app.ViewNextProtocol.Tooltip = {'Next protocol'};
+            app.ViewNextProtocol.Position = [291 38 25 22];
+            app.ViewNextProtocol.Text = '▶';
+
+            % Create ViewAllSweep
+            app.ViewAllSweep = uicheckbox(app.ViewProtocolAndSweepPanel);
+            app.ViewAllSweep.Enable = 'off';
+            app.ViewAllSweep.Tooltip = {'Click all to plot all weeps '};
+            app.ViewAllSweep.Text = ' all';
+            app.ViewAllSweep.Position = [220 10 37 22];
+
+            % Create VIewPreviousSweep
+            app.VIewPreviousSweep = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.VIewPreviousSweep.IconAlignment = 'center';
+            app.VIewPreviousSweep.FontSize = 14;
+            app.VIewPreviousSweep.Enable = 'off';
+            app.VIewPreviousSweep.Tooltip = {'Previous protocol'};
+            app.VIewPreviousSweep.Position = [265 10 25 22];
+            app.VIewPreviousSweep.Text = '◀';
+
+            % Create ViewNextSweep
+            app.ViewNextSweep = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewNextSweep.IconAlignment = 'center';
+            app.ViewNextSweep.FontSize = 14;
+            app.ViewNextSweep.Enable = 'off';
+            app.ViewNextSweep.Tooltip = {'Next protocol'};
+            app.ViewNextSweep.Position = [292 10 25 22];
+            app.ViewNextSweep.Text = '▶';
+
+            % Create ViewPlotPropertiesPanel
+            app.ViewPlotPropertiesPanel = uipanel(app.ViewOptionsTab);
+            app.ViewPlotPropertiesPanel.Title = 'Plot properties';
+            app.ViewPlotPropertiesPanel.FontWeight = 'bold';
+            app.ViewPlotPropertiesPanel.Scrollable = 'on';
+            app.ViewPlotPropertiesPanel.Position = [17 579 323 55];
+
+            % Create NunberDropDownLabel
+            app.NunberDropDownLabel = uilabel(app.ViewPlotPropertiesPanel);
+            app.NunberDropDownLabel.HorizontalAlignment = 'right';
+            app.NunberDropDownLabel.Enable = 'off';
+            app.NunberDropDownLabel.Position = [10 7 40 22];
+            app.NunberDropDownLabel.Text = 'Nunber';
+
+            % Create ViewPlotNumber
+            app.ViewPlotNumber = uidropdown(app.ViewPlotPropertiesPanel);
+            app.ViewPlotNumber.Items = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+            app.ViewPlotNumber.ItemsData = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+            app.ViewPlotNumber.Enable = 'off';
+            app.ViewPlotNumber.Tooltip = {'maximum 9 plots'};
+            app.ViewPlotNumber.Position = [56 7 44 22];
+            app.ViewPlotNumber.Value = '1';
+
+            % Create HeightratioEditFieldLabel
+            app.HeightratioEditFieldLabel = uilabel(app.ViewPlotPropertiesPanel);
+            app.HeightratioEditFieldLabel.HorizontalAlignment = 'right';
+            app.HeightratioEditFieldLabel.Position = [110 7 67 22];
+            app.HeightratioEditFieldLabel.Text = 'Height ratio';
+
+            % Create ViewPlotHeighRatio
+            app.ViewPlotHeighRatio = uieditfield(app.ViewPlotPropertiesPanel, 'numeric');
+            app.ViewPlotHeighRatio.Enable = 'off';
+            app.ViewPlotHeighRatio.Position = [182 7 135 22];
+
+            % Create ViewVariableSelectionPanel
+            app.ViewVariableSelectionPanel = uipanel(app.ViewOptionsTab);
+            app.ViewVariableSelectionPanel.Title = 'Variable selections for plotting';
+            app.ViewVariableSelectionPanel.FontWeight = 'bold';
+            app.ViewVariableSelectionPanel.Scrollable = 'on';
+            app.ViewVariableSelectionPanel.Position = [17 433 323 131];
+
+            % Create ViewVariableGrid
+            app.ViewVariableGrid = uigridlayout(app.ViewVariableSelectionPanel);
+            app.ViewVariableGrid.ColumnWidth = {'1x', '1x', '1x'};
+            app.ViewVariableGrid.RowHeight = {'1x', '1x', '1x'};
+
+            % Create ViewVariable_1
+            app.ViewVariable_1 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_1.Items = {};
+            app.ViewVariable_1.Enable = 'off';
+            app.ViewVariable_1.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_1.Layout.Row = 1;
+            app.ViewVariable_1.Layout.Column = 1;
+            app.ViewVariable_1.Value = {};
+
+            % Create ViewVariable_2
+            app.ViewVariable_2 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_2.Items = {};
+            app.ViewVariable_2.Enable = 'off';
+            app.ViewVariable_2.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_2.Layout.Row = 1;
+            app.ViewVariable_2.Layout.Column = 2;
+            app.ViewVariable_2.Value = {};
+
+            % Create ViewVariable_3
+            app.ViewVariable_3 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_3.Items = {};
+            app.ViewVariable_3.Enable = 'off';
+            app.ViewVariable_3.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_3.Layout.Row = 1;
+            app.ViewVariable_3.Layout.Column = 3;
+            app.ViewVariable_3.Value = {};
+
+            % Create ViewVariable_4
+            app.ViewVariable_4 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_4.Items = {};
+            app.ViewVariable_4.Enable = 'off';
+            app.ViewVariable_4.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_4.Layout.Row = 2;
+            app.ViewVariable_4.Layout.Column = 1;
+            app.ViewVariable_4.Value = {};
+
+            % Create ViewVariable_5
+            app.ViewVariable_5 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_5.Items = {};
+            app.ViewVariable_5.Enable = 'off';
+            app.ViewVariable_5.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_5.Layout.Row = 2;
+            app.ViewVariable_5.Layout.Column = 2;
+            app.ViewVariable_5.Value = {};
+
+            % Create ViewVariable_6
+            app.ViewVariable_6 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_6.Items = {};
+            app.ViewVariable_6.Enable = 'off';
+            app.ViewVariable_6.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_6.Layout.Row = 2;
+            app.ViewVariable_6.Layout.Column = 3;
+            app.ViewVariable_6.Value = {};
+
+            % Create ViewVariable_7
+            app.ViewVariable_7 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_7.Items = {};
+            app.ViewVariable_7.Enable = 'off';
+            app.ViewVariable_7.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_7.Layout.Row = 3;
+            app.ViewVariable_7.Layout.Column = 1;
+            app.ViewVariable_7.Value = {};
+
+            % Create ViewVariable_8
+            app.ViewVariable_8 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_8.Items = {};
+            app.ViewVariable_8.Enable = 'off';
+            app.ViewVariable_8.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_8.Layout.Row = 3;
+            app.ViewVariable_8.Layout.Column = 2;
+            app.ViewVariable_8.Value = {};
+
+            % Create ViewVariable_9
+            app.ViewVariable_9 = uidropdown(app.ViewVariableGrid);
+            app.ViewVariable_9.Items = {};
+            app.ViewVariable_9.Enable = 'off';
+            app.ViewVariable_9.Tooltip = {'Select a variable to plot'};
+            app.ViewVariable_9.Layout.Row = 3;
+            app.ViewVariable_9.Layout.Column = 3;
+            app.ViewVariable_9.Value = {};
+
+            % Create ViewVariablePropertiesPanel
+            app.ViewVariablePropertiesPanel = uipanel(app.ViewOptionsTab);
+            app.ViewVariablePropertiesPanel.Title = 'Variable properties';
+            app.ViewVariablePropertiesPanel.FontWeight = 'bold';
+            app.ViewVariablePropertiesPanel.Scrollable = 'on';
+            app.ViewVariablePropertiesPanel.Position = [17 310 323 105];
+
+            % Create ViewVariablePropertiesGridTemplate
+            app.ViewVariablePropertiesGridTemplate = uigridlayout(app.ViewVariablePropertiesPanel);
+            app.ViewVariablePropertiesGridTemplate.ColumnWidth = {90, 100, 20, 20, 30};
+            app.ViewVariablePropertiesGridTemplate.RowHeight = {20};
+            app.ViewVariablePropertiesGridTemplate.Scrollable = 'on';
+
+            % Create ViewXAxispropertiesPanel
+            app.ViewXAxispropertiesPanel = uipanel(app.ViewOptionsTab);
+            app.ViewXAxispropertiesPanel.Title = 'X-axis properties';
+            app.ViewXAxispropertiesPanel.FontWeight = 'bold';
+            app.ViewXAxispropertiesPanel.Position = [18 210 117 89];
+
+            % Create VIewShowAllXAxis
+            app.VIewShowAllXAxis = uibutton(app.ViewXAxispropertiesPanel, 'state');
+            app.VIewShowAllXAxis.Enable = 'off';
+            app.VIewShowAllXAxis.Text = 'Show all X-axis';
+            app.VIewShowAllXAxis.Position = [7 40 100 22];
+            app.VIewShowAllXAxis.Value = true;
+
+            % Create XLimEditFieldLabel
+            app.XLimEditFieldLabel = uilabel(app.ViewXAxispropertiesPanel);
+            app.XLimEditFieldLabel.HorizontalAlignment = 'right';
+            app.XLimEditFieldLabel.Enable = 'off';
+            app.XLimEditFieldLabel.Position = [11 11 33 22];
+            app.XLimEditFieldLabel.Text = 'XLim';
+
+            % Create ViewXLim
+            app.ViewXLim = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
+            app.ViewXLim.Enable = 'off';
+            app.ViewXLim.Position = [52 12 55 21];
+
+            % Create ViewSaveOptionsPanel
+            app.ViewSaveOptionsPanel = uipanel(app.ViewOptionsTab);
+            app.ViewSaveOptionsPanel.Title = 'Save options';
+            app.ViewSaveOptionsPanel.FontWeight = 'bold';
+            app.ViewSaveOptionsPanel.Scrollable = 'on';
+            app.ViewSaveOptionsPanel.Position = [146 189 194 111];
+
+            % Create ViewSaveSelectedOnly
+            app.ViewSaveSelectedOnly = uicheckbox(app.ViewSaveOptionsPanel);
+            app.ViewSaveSelectedOnly.Enable = 'off';
+            app.ViewSaveSelectedOnly.Text = 'selected only';
+            app.ViewSaveSelectedOnly.Position = [10 62 92 22];
+
+            % Create ViewSaveDataFormat
+            app.ViewSaveDataFormat = uibuttongroup(app.ViewSaveOptionsPanel);
+            app.ViewSaveDataFormat.Position = [118 38 60 45];
+
+            % Create ViewSaveMatButton
+            app.ViewSaveMatButton = uiradiobutton(app.ViewSaveDataFormat);
+            app.ViewSaveMatButton.Text = 'mat';
+            app.ViewSaveMatButton.Position = [6 25 43 17];
+            app.ViewSaveMatButton.Value = true;
+
+            % Create ViewSaveCSVButton
+            app.ViewSaveCSVButton = uiradiobutton(app.ViewSaveDataFormat);
+            app.ViewSaveCSVButton.Enable = 'off';
+            app.ViewSaveCSVButton.Text = 'csv';
+            app.ViewSaveCSVButton.Position = [6 3 43 17];
+
+            % Create ViewSaveDataButton
+            app.ViewSaveDataButton = uibutton(app.ViewSaveOptionsPanel, 'push');
+            app.ViewSaveDataButton.Enable = 'off';
+            app.ViewSaveDataButton.Position = [10 36 84 22];
+            app.ViewSaveDataButton.Text = 'Save data';
+
+            % Create ViewScreenshotButton
+            app.ViewScreenshotButton = uibutton(app.ViewSaveOptionsPanel, 'push');
+            app.ViewScreenshotButton.Enable = 'off';
+            app.ViewScreenshotButton.Position = [10 6 109 22];
+            app.ViewScreenshotButton.Text = 'Take screenshot';
+
+            % Create ViewLog
+            app.ViewLog = uitextarea(app.ViewOptionsTab);
+            app.ViewLog.Enable = 'off';
+            app.ViewLog.Position = [12 10 324 115];
+            app.ViewLog.Value = {'Log'};
+
+            % Create AnalysisOptionsTab
+            app.AnalysisOptionsTab = uitab(app.OptionsGroup);
+            app.AnalysisOptionsTab.Title = 'Analysis options';
+            app.AnalysisOptionsTab.Scrollable = 'on';
+
+            % Create AnalysisLog
+            app.AnalysisLog = uitextarea(app.AnalysisOptionsTab);
+            app.AnalysisLog.Enable = 'off';
+            app.AnalysisLog.Position = [12 10 324 115];
+            app.AnalysisLog.Value = {'Log'};
+
+            % Create OutputsPanel
+            app.OutputsPanel = uipanel(app.GridLayout);
+            app.OutputsPanel.Layout.Row = 1;
+            app.OutputsPanel.Layout.Column = 2;
+            app.OutputsPanel.Scrollable = 'on';
+
+            % Create OutputsGroup
+            app.OutputsGroup = uitabgroup(app.OutputsPanel);
+            app.OutputsGroup.Position = [10 13 942 826];
+
+            % Create ViewOutputsTab
+            app.ViewOutputsTab = uitab(app.OutputsGroup);
+            app.ViewOutputsTab.Title = 'View output';
+
+            % Create ViewFigureBoundary
+            app.ViewFigureBoundary = uipanel(app.ViewOutputsTab);
+            app.ViewFigureBoundary.Position = [17 21 915 762];
+
+            % Create AnalysisOutputsTab
+            app.AnalysisOutputsTab = uitab(app.OutputsGroup);
+            app.AnalysisOutputsTab.Title = 'Analysis output';
+
+            % Create AnalysisFigureBoundary
+            app.AnalysisFigureBoundary = uipanel(app.AnalysisOutputsTab);
+            app.AnalysisFigureBoundary.Position = [17 30 889 753];
+
+            % Show the figure after all components are created
+            app.MainFIgure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = HEKA_Explorer
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.MainFIgure)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.MainFIgure)
+        end
+    end
+end]]></w:t></w:r></w:p></w:body></w:document>
