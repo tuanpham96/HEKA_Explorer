@@ -2,7 +2,7 @@
 
     % Properties that correspond to app components
     properties (Access = public)
-        MainFIgure                    matlab.ui.Figure
+        MainFigure                    matlab.ui.Figure
         GridLayout                    matlab.ui.container.GridLayout
         OptionsPanel                  matlab.ui.container.Panel
         AppTitle                      matlab.ui.control.Label
@@ -31,10 +31,10 @@
         ViewSweepSelectionLabel       matlab.ui.control.Label
         ViewSweepSelection            matlab.ui.control.EditField
         ViewAllSweep                  matlab.ui.control.CheckBox
-        VIewPreviousSweep             matlab.ui.control.Button
+        ViewPreviousSweep             matlab.ui.control.Button
         ViewNextSweep                 matlab.ui.control.Button
         ViewPlotPropertiesPanel       matlab.ui.container.Panel
-        VIewPlotNumberLabel           matlab.ui.control.Label
+        ViewPlotNumberLabel           matlab.ui.control.Label
         ViewPlotNumber                matlab.ui.control.DropDown
         ViewPlotHeightRatioLabel      matlab.ui.control.Label
         ViewPlotHeightRatio           matlab.ui.control.EditField
@@ -60,12 +60,13 @@
         ViewVariableYLimLowerBound    matlab.ui.control.NumericEditField
         ViewVariableYLimUpperBound    matlab.ui.control.NumericEditField
         ViewVariableYLimAuto          matlab.ui.control.CheckBox
+        ViewVariableColorShower       matlab.ui.control.HTML
         ViewXAxispropertiesPanel      matlab.ui.container.Panel
-        VIewShowAllXAxis              matlab.ui.control.StateButton
-        ViewVariableXLimLabel         matlab.ui.control.Label
-        ViewVariableXLimLowerBound    matlab.ui.control.NumericEditField
-        ViewVariableXLimUpperBound    matlab.ui.control.NumericEditField
-        ViewVariableXLimAuto          matlab.ui.control.CheckBox
+        ViewShowAllXAxis              matlab.ui.control.StateButton
+        ViewXLimLabel                 matlab.ui.control.Label
+        ViewXLimLowerBound            matlab.ui.control.NumericEditField
+        ViewXLimUpperBound            matlab.ui.control.NumericEditField
+        ViewXLimAuto                  matlab.ui.control.CheckBox
         ViewSaveOptionsPanel          matlab.ui.container.Panel
         ViewSaveSelectedOnly          matlab.ui.control.CheckBox
         ViewSaveDataFormat            matlab.ui.container.ButtonGroup
@@ -102,6 +103,16 @@
             'I know they are NOT', ...
             'Unsure but let''s go with YES', ...
             'Unsure but let''s go with NO'}});
+    end
+    
+    properties (Access = public)
+        % TODO: turn these into PRIVATE after development
+        ViewAxes; 
+        AnalysisAxes; 
+        axes_top_margin = 0.08;
+        axes_bottom_margin = 0.1;
+        axes_left_margin = 0.1; 
+        axes_right_margin = 0.1; 
     end
     
     properties (Access = public)
@@ -145,10 +156,10 @@
             switch tag
                 case {'WARNING', 'WARN'}
                     newMessage = [newMessage, 'Sorry, not sorry!'];
-                    uialert(app.MainFIgure, newMessage, 'Icon', 'warning');
+                    uialert(app.MainFigure, newMessage, 'Icon', 'warning');
                 case {'ERROR', 'ERR'}
                     newMessage = [newMessage, 'Actually, so sorry!'];
-                    uialert(app.MainFIgure, newMessage, 'Icon', 'error');
+                    uialert(app.MainFigure, newMessage, 'Icon', 'error');
             end
             
         end
@@ -315,7 +326,111 @@
             app.current_settings.xlim = 'auto';
         end
         
-        function results = showSelectedSweep(app)
+        function plotViewAxes(app)
+            max_sweeps = app.current_settings.sweeps.max;
+            num_plots = app.current_settings.plot.num;
+            selected_plotvars = [app.ViewVariableGrid.Children(1:num_plots).Value];
+            
+            delete(app.ViewFigureBoundary.Children);
+            
+            view_positions = app.ViewFigureBoundary.Position;
+            view_width = view_positions(3);
+            view_height = view_positions(4); 
+            ax_heights = app.current_settings.plot.height_ratio * (1 - app.axes_bottom_margin - app.axes_top_margin);
+            ax_bottoms = 1 - cumsum(ax_heights) - app.axes_top_margin;
+            ax_left = app.axes_left_margin; 
+            ax_width = 1 - app.axes_left_margin - app.axes_right_margin; 
+            
+%             ax_heights = ax_heights * view_height;  
+%             ax_bottoms = ax_bottoms * view_height; 
+%             ax_left = ax_left * view_width; 
+%             ax_width = ax_width * view_width;
+%             
+%             app.ViewAxes = arrayfun(@(b,h) uiaxes(app.ViewFigureBoundary, ...
+%                 'Position', [ax_left,b,ax_width,h] ),ax_bottoms, ax_heights);
+            app.ViewAxes = arrayfun(@(b,h) axes(app.ViewFigureBoundary, ...
+                'Position', [ax_left,b,ax_width,h] ),ax_bottoms, ax_heights);
+            
+            arrayfun(@(ax) set(ax.Toolbar, 'Visible', 'on'), app.ViewAxes); 
+            arrayfun(@(ax) set(ax, 'Interactions', [zoomInteraction regionZoomInteraction dataTipInteraction]), app.ViewAxes);  
+            
+            dt_ms = app.current_data.dt_ms;
+            
+            var_ids = fieldnames(app.current_variables);
+            for ind_vars = 1:length(var_ids)
+                app.current_variables.(var_ids{ind_vars}).axes_indices = [];
+            end
+            
+            for ind_plt = 1:num_plots
+                var_id = sprintf('var%d', selected_plotvars(ind_plt));
+                var_props = app.current_variables.(var_id);
+                var_color = var_props.color;
+                var_newname = var_props.new_name;
+                var_ylim = var_props.ylim;
+                
+                app.ViewAxes(ind_plt).Tag = var_id;
+                
+                hold(app.ViewAxes(ind_plt), 'on');
+                if mod(ind_plt,2) == 1
+                    yyaxis(app.ViewAxes(ind_plt), 'left');
+                    app.ViewAxes(ind_plt).YAxis(1).Color = var_color;
+                    app.ViewAxes(ind_plt).YAxis(2).Color = 'none';
+                else
+                    yyaxis(app.ViewAxes(ind_plt), 'right');
+                    app.ViewAxes(ind_plt).YAxis(1).Color = 'none';
+                    app.ViewAxes(ind_plt).YAxis(2).Color = var_color;
+                end
+                
+                main_data_struct = app.current_data.(var_props.identity);
+                trace_data = main_data_struct.data{var_props.index};
+                trace_name = main_data_struct.names{var_props.index};
+                trace_unit = main_data_struct.units{var_props.index};
+                
+                t_vec = (0:(size(trace_data,1)-1)) * dt_ms;
+                
+                if size(trace_data, 2) ~= max_sweeps
+                    line_tag = 'show_all';
+                    arrayfun(@(x) plot(app.ViewAxes(ind_plt), t_vec, trace_data(:,x), ...
+                        'LineStyle', '-', ...
+                        'Marker', 'none', ...
+                        'Color', var_color, ...
+                        'Tag', line_tag), 1:size(trace_data, 2));
+                else
+                    arrayfun(@(x) plot(app.ViewAxes(ind_plt), t_vec, trace_data(:,x), ...
+                        'LineStyle', '-', ...
+                        'Marker', 'none', ...
+                        'Color', var_color, ...
+                        'Tag', num2str(x)), 1:size(trace_data, 2));
+                end
+                
+                if ind_plt == num_plots
+                    xlabel(app.ViewAxes(ind_plt), 'time (ms)');
+                else
+                    set(app.ViewAxes(ind_plt), 'xcolor', 'none');
+                end
+                
+                if strcmp(var_newname, trace_name)
+                    ylabel(app.ViewAxes(ind_plt), sprintf('%s (%s)', trace_name, trace_unit));
+                else
+                    ylabel(app.ViewAxes(ind_plt), sprintf('%s (%s)\\newline%s', var_newname, trace_unit, trace_name));
+                end
+                
+                ylim(app.ViewAxes(ind_plt),var_ylim);
+                
+                cur_ax_inds = var_props.axes_indices;
+                app.current_variables.(var_id).axes_indices = unique([cur_ax_inds, ind_plt]);
+                
+            end
+            
+            xlim(app.ViewAxes(ind_plt), app.current_settings.xlim); 
+            drawnow; 
+%             pause(0.01);
+            %linkaxes(app.ViewAxes, 'x');
+            
+%             app.ViewShowAllXAxis;
+        end
+        
+        function showSelectedSweep(app)
             
         end
         
@@ -328,13 +443,23 @@
                 end
             else
                 sweep_selection_choice = 'on';
-                app.SweepSelectionInput.String = '1';
+                app.ViewSweepSelection.String = '1';
                 app.current_settings.sweeps.selected = 1;
             end
             
-            app.SweepSelectionInput.Enable = sweep_selection_choice;
-            app.SweepSelectionNextButton.Enable = sweep_selection_choice;
-            app.SweepSelectionPreviousButton.Enable = sweep_selection_choice;
+            app.ViewSweepSelection.Enable = sweep_selection_choice;
+            app.ViewNextSweep.Enable = sweep_selection_choice;
+            app.ViewPreviousSweep.Enable = sweep_selection_choice;
+        end
+        
+        function changeViewVariableColorShowerHTML(app, new_color)
+            if ischar(new_color), new_color = str2colorvec(new_color); end
+            new_color = floor(255*new_color);
+            color_string = sprintf('rgb(%d,%d,%d)', new_color(1), new_color(2), new_color(3));
+            app.ViewVariableColorShower.HTMLSource = ['<body scroll="no" style="overflow: hidden"">' ...
+                '<div id="rectangle" style="background-color:' color_string ...
+                ';border-radius:6px;width:18px;height:18px">  </div></body>'];
+            
         end
     end
     
@@ -343,6 +468,14 @@
 
     % Callbacks that handle component events
     methods (Access = private)
+
+        % Code that executes after component creation
+        function startupFcn(app)
+            app.MainFigure.WindowState = 'normal'; 
+            pause(0.01);
+%             app.MainFigure.Resize = 'off'; 
+%             app.MainFigure.SizeChangedFcn = ''; 
+        end
 
         % Button pushed function: LoadDataButton
         function LoadDataButtonPushed(app, event)
@@ -390,7 +523,7 @@
         % Button pushed function: ConvertDATtoMATButton
         function ConvertDATtoMATButtonPushed(app, event)
             sel_opts = {'Save the loaded DAT as MAT','Convert other DAT files','Cancel'};
-            selection = uiconfirm(app.MainFIgure,'Do you want to convert the loaded data?', 'Convert DAT to MAT',...
+            selection = uiconfirm(app.MainFigure,'Do you want to convert the loaded data?', 'Convert DAT to MAT',...
                 'Options', sel_opts, 'DefaultOption',1,'CancelOption',3);
             
             
@@ -461,34 +594,51 @@
             app.current_settings.protocol.value = selected_protocol_value;
             app.current_settings.protocol.name = app.current_settings.available_protocols{selected_protocol_value};
             
-            app.getRecordings(selected_protocol_value);
+            try
+                app.getRecordings(selected_protocol_value);
+            catch
+                app.updateLog('ViewLog', 'ERROR', ['There was some error in reading the data as selected. ' ...
+                    'Nothing will be done. Please try to select another protocol/data or check your data conversion again.']);
+            end
+            
             num_sweeps = app.current_data.num_sweeps;
             app.current_settings.sweeps.max = num_sweeps;
             
-            % ViewSweepSelection
+            % ViewAllSweep turned on automatically
             app.ViewAllSweep.Enable = 'on';
             app.ViewAllSweep.Value = 1;
             app.ViewAllSweepTickedInitialized;
-            app.ViewSweepSelection.Enable = 'on';
             
+            % ViewPlot settings
             var_names = struct2cell(structfun(@(x) x.original_name, app.current_variables, 'uni', 0));
-            app.NumberOfVariableMenu.Value = min(app.max_numplots, length(var_names));
+            init_num_plots = min(app.view_max_numplots, length(var_names));
+            app.current_settings.plot.num = init_num_plots;
+            app.current_settings.plot.height_ratio = ones(1, init_num_plots)/init_num_plots;
+            app.ViewPlotNumber.Value = init_num_plots;
+            app.ViewPlotHeightRatio.Value = 'auto';
+            set(app.ViewPlotPropertiesPanel.Children, 'Enable', 'on');
             
-            selected_varinds = (1:app.max_numplots)';
+            % ViewVariable initialized
+            selected_varinds = (1:app.view_max_numplots)';
             selected_varinds(selected_varinds > length(var_names)) = 1;
-            arrayfun(@(x,v) set(x, 'String', var_names, 'Value', v), ...
-                app.VariableSelection_MenuList, selected_varinds);
+            arrayfun(@(x,v) set(x, 'Items', var_names, 'ItemsData', selected_varinds, 'Value', v), ...
+                app.ViewVariableGrid.Children, selected_varinds);
             
-            app.NumberOfVariableMenuChanged;
+            app.ViewPlotNumberChanged;
             
-            app.VariableManipulation_OriginalNameMenu.String = var_names;
-            app.VariableManipulation_OriginalNameMenu.Value = 1;
-            app.VariableManipulation_OriginalNameMenuChanged;
+            % ViewVariableProperties
+            viewvarprops_children = app.ViewVariablePropertiesPanel.Children; 
+            set(viewvarprops_children(isprop(viewvarprops_children,'Enable')), 'Enable', 'on');
+            app.ViewVariableOrignalName.Items = var_names;
+            app.ViewVariableOrignalName.ItemsData = 1:length(var_names);
+            app.ViewVariableOrignalName.Value = 1;
+            app.ViewVariableOrignalNameChanged;
             
-            app.XAxisLinkButton.Value = 1;
-            app.XAxisShowAllButton.Value = 0;
+            % ViewXAxisProperties
+            app.ViewShowAllXAxis.Value = 0;
             
-            app.plotTraces;
+            app.plotViewAxes;
+            
         end
 
         % Value changed function: ViewAllSweep
@@ -497,9 +647,67 @@
             app.showOnlySelectedSweep;
         end
 
+        % Value changed function: ViewPlotNumber
+        function ViewPlotNumberChanged(app, event)
+            value = app.ViewPlotNumber.Value;
+            app.current_settings.plot.num = value;
+            turn_ons = 1:value;
+            turn_off = (value+1):app.view_max_numplots;
+            
+            arrayfun(@(x) set(x, 'Enable', 'on'), app.ViewVariableGrid.Children(turn_ons));
+            arrayfun(@(x) set(x, 'Enable', 'off'), app.ViewVariableGrid.Children(turn_off));
+        end
+
+        % Value changed function: ViewPlotHeightRatio
+        function ViewPlotHeightRatioChanged(app, event)
+            value = app.ViewPlotHeightRatio.Value;
+            num_plots = app.current_settings.plot.num;
+            common_warning_message = ['There was a problem with the height ratio. It was supposed to be ' ...
+                'either "auto", "equal" or a valid numeric vector of length equal to the number of plots. ' ...
+                'Because of this, will fall back to equally spaced subplots.'];
+            if strcmpi(value, 'auto') || strcmpi(value, 'equal')
+                value = ones(1, num_plots);
+            else
+                value = str2num(value); %#ok<ST2NM>
+            end
+            if any(isnan(value)) || isempty(value) || length(vale) ~= num_plots
+                app.updateLog('ViewLog', 'WARNING', common_warning_message)
+            end
+            value = value/sum(value);
+            app.current_settings.plot.height_ratio = value;
+            % TODO: continue
+        end
+
+        % Value changed function: ViewVariableOrignalName
+        function ViewVariableOrignalNameChanged(app, event)
+            selected_ind = app.ViewVariableOrignalName.Value;
+            
+            var_props = app.current_variables.(sprintf('var%d', selected_ind));
+            app.ViewVariableNewName.Value = var_props.new_name;
+            app.changeViewVariableColorShowerHTML(var_props.color);
+            app.ViewVariableSaveButton.Value = var_props.save;
+            
+            app.ViewVariableYLimAuto.Value = ischar(var_props.ylim);
+            app.ViewVariableYLimAutoChanged;
+        end
+
+        % Value changed function: ViewVariableYLimAuto
+        function ViewVariableYLimAutoChanged(app, event)
+            value = app.ViewVariableYLimAuto.Value;
+            value_mode = 'on';
+            if value == 1
+                value_mode = 'off';
+            end
+            
+            app.ViewVariableYLimLowerBound.Enable = value_mode;
+            app.ViewVariableYLimUpperBound.Enable = value_mode;
+            
+            % TODO: implement YLim changes
+        end
+
         % Changes arrangement of the app based on UIFigure width
         function updateAppLayout(app, event)
-            currentFigureWidth = app.MainFIgure.Position(3);
+            currentFigureWidth = app.MainFigure.Position(3);
             if(currentFigureWidth <= app.onePanelWidth)
                 % Change to a 2x1 grid
                 app.GridLayout.RowHeight = {866, 866};
@@ -509,7 +717,7 @@
             else
                 % Change to a 1x2 grid
                 app.GridLayout.RowHeight = {'1x'};
-                app.GridLayout.ColumnWidth = {370, '1x'};
+                app.GridLayout.ColumnWidth = {356, '1x'};
                 app.OutputsPanel.Layout.Row = 1;
                 app.OutputsPanel.Layout.Column = 2;
             end
@@ -522,16 +730,16 @@
         % Create UIFigure and components
         function createComponents(app)
 
-            % Create MainFIgure and hide until all components are created
-            app.MainFIgure = uifigure('Visible', 'off');
-            app.MainFIgure.AutoResizeChildren = 'off';
-            app.MainFIgure.Position = [100 100 1338 866];
-            app.MainFIgure.Name = 'UI Figure';
-            app.MainFIgure.SizeChangedFcn = createCallbackFcn(app, @updateAppLayout, true);
+            % Create MainFigure and hide until all components are created
+            app.MainFigure = uifigure('Visible', 'off');
+            app.MainFigure.AutoResizeChildren = 'off';
+            app.MainFigure.Position = [100 100 1311 866];
+            app.MainFigure.Name = 'UI Figure';
+            app.MainFigure.SizeChangedFcn = createCallbackFcn(app, @updateAppLayout, true);
 
             % Create GridLayout
-            app.GridLayout = uigridlayout(app.MainFIgure);
-            app.GridLayout.ColumnWidth = {370, '1x'};
+            app.GridLayout = uigridlayout(app.MainFigure);
+            app.GridLayout.ColumnWidth = {356, '1x'};
             app.GridLayout.RowHeight = {'1x'};
             app.GridLayout.ColumnSpacing = 0;
             app.GridLayout.RowSpacing = 0;
@@ -547,19 +755,19 @@
             % Create AppTitle
             app.AppTitle = uilabel(app.OptionsPanel);
             app.AppTitle.FontSize = 20;
-            app.AppTitle.Position = [14 824 298 25];
+            app.AppTitle.Position = [8 824 298 25];
             app.AppTitle.Text = 'PatchMaster recordings explorer';
 
             % Create DataInformation
             app.DataInformation = uieditfield(app.OptionsPanel, 'text');
             app.DataInformation.HorizontalAlignment = 'center';
             app.DataInformation.Enable = 'off';
-            app.DataInformation.Position = [14 794 252 22];
+            app.DataInformation.Position = [8 794 252 22];
             app.DataInformation.Value = '(no data loaded yet)';
 
             % Create OptionsGroup
             app.OptionsGroup = uitabgroup(app.OptionsPanel);
-            app.OptionsGroup.Position = [13 14 346 768];
+            app.OptionsGroup.Position = [7 14 344 768];
 
             % Create DataOptionsTab
             app.DataOptionsTab = uitab(app.OptionsGroup);
@@ -717,14 +925,14 @@
             app.ViewAllSweep.Text = ' all';
             app.ViewAllSweep.Position = [220 10 37 22];
 
-            % Create VIewPreviousSweep
-            app.VIewPreviousSweep = uibutton(app.ViewProtocolAndSweepPanel, 'push');
-            app.VIewPreviousSweep.IconAlignment = 'center';
-            app.VIewPreviousSweep.FontSize = 14;
-            app.VIewPreviousSweep.Enable = 'off';
-            app.VIewPreviousSweep.Tooltip = {'Previous protocol'};
-            app.VIewPreviousSweep.Position = [265 10 25 22];
-            app.VIewPreviousSweep.Text = '◀';
+            % Create ViewPreviousSweep
+            app.ViewPreviousSweep = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewPreviousSweep.IconAlignment = 'center';
+            app.ViewPreviousSweep.FontSize = 14;
+            app.ViewPreviousSweep.Enable = 'off';
+            app.ViewPreviousSweep.Tooltip = {'Previous protocol'};
+            app.ViewPreviousSweep.Position = [265 10 25 22];
+            app.ViewPreviousSweep.Text = '◀';
 
             % Create ViewNextSweep
             app.ViewNextSweep = uibutton(app.ViewProtocolAndSweepPanel, 'push');
@@ -742,15 +950,16 @@
             app.ViewPlotPropertiesPanel.Scrollable = 'on';
             app.ViewPlotPropertiesPanel.Position = [18 577 323 55];
 
-            % Create VIewPlotNumberLabel
-            app.VIewPlotNumberLabel = uilabel(app.ViewPlotPropertiesPanel);
-            app.VIewPlotNumberLabel.HorizontalAlignment = 'right';
-            app.VIewPlotNumberLabel.Position = [10 7 40 22];
-            app.VIewPlotNumberLabel.Text = 'Nunber';
+            % Create ViewPlotNumberLabel
+            app.ViewPlotNumberLabel = uilabel(app.ViewPlotPropertiesPanel);
+            app.ViewPlotNumberLabel.HorizontalAlignment = 'right';
+            app.ViewPlotNumberLabel.Position = [10 7 40 22];
+            app.ViewPlotNumberLabel.Text = 'Nunber';
 
             % Create ViewPlotNumber
             app.ViewPlotNumber = uidropdown(app.ViewPlotPropertiesPanel);
             app.ViewPlotNumber.Items = {};
+            app.ViewPlotNumber.ValueChangedFcn = createCallbackFcn(app, @ViewPlotNumberChanged, true);
             app.ViewPlotNumber.Enable = 'off';
             app.ViewPlotNumber.Tooltip = {'maximum 9 plots'};
             app.ViewPlotNumber.Position = [56 7 44 22];
@@ -764,6 +973,7 @@
 
             % Create ViewPlotHeightRatio
             app.ViewPlotHeightRatio = uieditfield(app.ViewPlotPropertiesPanel, 'text');
+            app.ViewPlotHeightRatio.ValueChangedFcn = createCallbackFcn(app, @ViewPlotHeightRatioChanged, true);
             app.ViewPlotHeightRatio.Enable = 'off';
             app.ViewPlotHeightRatio.Position = [177 7 134 22];
 
@@ -875,6 +1085,7 @@
             % Create ViewVariableOrignalName
             app.ViewVariableOrignalName = uidropdown(app.ViewVariablePropertiesPanel);
             app.ViewVariableOrignalName.Items = {};
+            app.ViewVariableOrignalName.ValueChangedFcn = createCallbackFcn(app, @ViewVariableOrignalNameChanged, true);
             app.ViewVariableOrignalName.Enable = 'off';
             app.ViewVariableOrignalName.Position = [7 44 96 22];
             app.ViewVariableOrignalName.Value = {};
@@ -899,7 +1110,7 @@
             app.ViewVariableSaveButton = uibutton(app.ViewVariablePropertiesPanel, 'state');
             app.ViewVariableSaveButton.Enable = 'off';
             app.ViewVariableSaveButton.Text = 'Save';
-            app.ViewVariableSaveButton.Position = [165 13 44 22];
+            app.ViewVariableSaveButton.Position = [198 13 44 22];
 
             % Create ViewVariableYLimLabel
             app.ViewVariableYLimLabel = uilabel(app.ViewVariablePropertiesPanel);
@@ -918,11 +1129,17 @@
 
             % Create ViewVariableYLimAuto
             app.ViewVariableYLimAuto = uicheckbox(app.ViewVariablePropertiesPanel);
+            app.ViewVariableYLimAuto.ValueChangedFcn = createCallbackFcn(app, @ViewVariableYLimAutoChanged, true);
             app.ViewVariableYLimAuto.Enable = 'off';
             app.ViewVariableYLimAuto.Text = 'auto';
             app.ViewVariableYLimAuto.FontSize = 10;
             app.ViewVariableYLimAuto.Position = [272 73 41 16];
             app.ViewVariableYLimAuto.Value = true;
+
+            % Create ViewVariableColorShower
+            app.ViewVariableColorShower = uihtml(app.ViewVariablePropertiesPanel);
+            app.ViewVariableColorShower.HTMLSource = '<body scroll="no" style="overflow: hidden""><div id="rectangle" style="background-color:rgb(200,200,200);border-radius:6px;width:18px;height:18px">  </div></body>';
+            app.ViewVariableColorShower.Position = [163 14 20 20];
 
             % Create ViewXAxispropertiesPanel
             app.ViewXAxispropertiesPanel = uipanel(app.ViewOptionsTab);
@@ -930,35 +1147,35 @@
             app.ViewXAxispropertiesPanel.FontWeight = 'bold';
             app.ViewXAxispropertiesPanel.Position = [18 184 117 115];
 
-            % Create VIewShowAllXAxis
-            app.VIewShowAllXAxis = uibutton(app.ViewXAxispropertiesPanel, 'state');
-            app.VIewShowAllXAxis.Enable = 'off';
-            app.VIewShowAllXAxis.Text = 'Show all X-axis';
-            app.VIewShowAllXAxis.Position = [7 66 100 22];
-            app.VIewShowAllXAxis.Value = true;
+            % Create ViewShowAllXAxis
+            app.ViewShowAllXAxis = uibutton(app.ViewXAxispropertiesPanel, 'state');
+            app.ViewShowAllXAxis.Enable = 'off';
+            app.ViewShowAllXAxis.Text = 'Show all X-axis';
+            app.ViewShowAllXAxis.Position = [7 66 100 22];
+            app.ViewShowAllXAxis.Value = true;
 
-            % Create ViewVariableXLimLabel
-            app.ViewVariableXLimLabel = uilabel(app.ViewXAxispropertiesPanel);
-            app.ViewVariableXLimLabel.Position = [23 40 39 22];
-            app.ViewVariableXLimLabel.Text = 'XLims';
+            % Create ViewXLimLabel
+            app.ViewXLimLabel = uilabel(app.ViewXAxispropertiesPanel);
+            app.ViewXLimLabel.Position = [23 40 33 22];
+            app.ViewXLimLabel.Text = 'XLim';
 
-            % Create ViewVariableXLimLowerBound
-            app.ViewVariableXLimLowerBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
-            app.ViewVariableXLimLowerBound.Enable = 'off';
-            app.ViewVariableXLimLowerBound.Position = [22 13 40 22];
+            % Create ViewXLimLowerBound
+            app.ViewXLimLowerBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
+            app.ViewXLimLowerBound.Enable = 'off';
+            app.ViewXLimLowerBound.Position = [22 13 40 22];
 
-            % Create ViewVariableXLimUpperBound
-            app.ViewVariableXLimUpperBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
-            app.ViewVariableXLimUpperBound.Enable = 'off';
-            app.ViewVariableXLimUpperBound.Position = [67 13 40 22];
+            % Create ViewXLimUpperBound
+            app.ViewXLimUpperBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
+            app.ViewXLimUpperBound.Enable = 'off';
+            app.ViewXLimUpperBound.Position = [67 13 40 22];
 
-            % Create ViewVariableXLimAuto
-            app.ViewVariableXLimAuto = uicheckbox(app.ViewXAxispropertiesPanel);
-            app.ViewVariableXLimAuto.Enable = 'off';
-            app.ViewVariableXLimAuto.Text = 'auto';
-            app.ViewVariableXLimAuto.FontSize = 10;
-            app.ViewVariableXLimAuto.Position = [66 42 41 16];
-            app.ViewVariableXLimAuto.Value = true;
+            % Create ViewXLimAuto
+            app.ViewXLimAuto = uicheckbox(app.ViewXAxispropertiesPanel);
+            app.ViewXLimAuto.Enable = 'off';
+            app.ViewXLimAuto.Text = 'auto';
+            app.ViewXLimAuto.FontSize = 10;
+            app.ViewXLimAuto.Position = [66 42 41 16];
+            app.ViewXLimAuto.Value = true;
 
             % Create ViewSaveOptionsPanel
             app.ViewSaveOptionsPanel = uipanel(app.ViewOptionsTab);
@@ -1030,7 +1247,7 @@
 
             % Create OutputsGroup
             app.OutputsGroup = uitabgroup(app.OutputsPanel);
-            app.OutputsGroup.Position = [10 13 942 826];
+            app.OutputsGroup.Position = [12 32 930 794];
 
             % Create ViewOutputsTab
             app.ViewOutputsTab = uitab(app.OutputsGroup);
@@ -1038,7 +1255,9 @@
 
             % Create ViewFigureBoundary
             app.ViewFigureBoundary = uipanel(app.ViewOutputsTab);
-            app.ViewFigureBoundary.Position = [17 21 915 762];
+            app.ViewFigureBoundary.AutoResizeChildren = 'off';
+            app.ViewFigureBoundary.BackgroundColor = [1 1 1];
+            app.ViewFigureBoundary.Position = [19 14 890 739];
 
             % Create AnalysisOutputsTab
             app.AnalysisOutputsTab = uitab(app.OutputsGroup);
@@ -1046,10 +1265,11 @@
 
             % Create AnalysisFigureBoundary
             app.AnalysisFigureBoundary = uipanel(app.AnalysisOutputsTab);
-            app.AnalysisFigureBoundary.Position = [17 30 889 753];
+            app.AnalysisFigureBoundary.BackgroundColor = [1 1 1];
+            app.AnalysisFigureBoundary.Position = [19 14 890 739];
 
             % Show the figure after all components are created
-            app.MainFIgure.Visible = 'on';
+            app.MainFigure.Visible = 'on';
         end
     end
 
@@ -1063,7 +1283,10 @@
             createComponents(app)
 
             % Register the app with App Designer
-            registerApp(app, app.MainFIgure)
+            registerApp(app, app.MainFigure)
+
+            % Execute the startup function
+            runStartupFcn(app, @startupFcn)
 
             if nargout == 0
                 clear app
@@ -1074,7 +1297,7 @@
         function delete(app)
 
             % Delete UIFigure when app is deleted
-            delete(app.MainFIgure)
+            delete(app.MainFigure)
         end
     end
 end]]></w:t></w:r></w:p></w:body></w:document>
