@@ -2,75 +2,86 @@
 
     % Properties that correspond to app components
     properties (Access = public)
-        MainFIgure                   matlab.ui.Figure
-        GridLayout                   matlab.ui.container.GridLayout
-        OptionsPanel                 matlab.ui.container.Panel
-        AppTitle                     matlab.ui.control.Label
-        OptionsGroup                 matlab.ui.container.TabGroup
-        DataOptionsTab               matlab.ui.container.Tab
-        DataLoadingOptionsPanel      matlab.ui.container.Panel
-        LoadDataButton               matlab.ui.control.Button
-        DataFormatButtonGroup        matlab.ui.container.ButtonGroup
-        LoadDATPatchMasterButton     matlab.ui.control.RadioButton
-        LoadMATDataTableButton       matlab.ui.control.RadioButton
-        LoadITXPatchMasterButton     matlab.ui.control.RadioButton
-        LoadMATPatchMasterButton     matlab.ui.control.RadioButton
-        LoadMATITXButton             matlab.ui.control.RadioButton
-        DataConverstionPanel         matlab.ui.container.Panel
-        DataLog                      matlab.ui.control.TextArea
-        ConvertITXtoMATButton        matlab.ui.control.Button
-        ConvertDATtoMATButton        matlab.ui.control.Button
-        ViewOptionsTab               matlab.ui.container.Tab
-        ViewProtocolAndSweepPanel    matlab.ui.container.Panel
-        ProtocolDropDownLabel        matlab.ui.control.Label
-        ViewProtocolSelection        matlab.ui.control.DropDown
-        SweepEditFieldLabel          matlab.ui.control.Label
-        ViewSweepSelection           matlab.ui.control.NumericEditField
-        ViewProtocolNameChanger      matlab.ui.control.Button
-        ViewPreviousProtocol         matlab.ui.control.Button
-        ViewNextProtocol             matlab.ui.control.Button
-        ViewAllSweep                 matlab.ui.control.CheckBox
-        VIewPreviousSweep            matlab.ui.control.Button
-        ViewNextSweep                matlab.ui.control.Button
-        ViewPlotPropertiesPanel      matlab.ui.container.Panel
-        NunberDropDownLabel          matlab.ui.control.Label
-        ViewPlotNumber               matlab.ui.control.DropDown
-        HeightratioEditFieldLabel    matlab.ui.control.Label
-        ViewPlotHeighRatio           matlab.ui.control.NumericEditField
-        ViewVariableSelectionPanel   matlab.ui.container.Panel
-        ViewVariableGrid             matlab.ui.container.GridLayout
-        ViewVariable_1               matlab.ui.control.DropDown
-        ViewVariable_2               matlab.ui.control.DropDown
-        ViewVariable_3               matlab.ui.control.DropDown
-        ViewVariable_4               matlab.ui.control.DropDown
-        ViewVariable_5               matlab.ui.control.DropDown
-        ViewVariable_6               matlab.ui.control.DropDown
-        ViewVariable_7               matlab.ui.control.DropDown
-        ViewVariable_8               matlab.ui.control.DropDown
-        ViewVariable_9               matlab.ui.control.DropDown
-        ViewVariablePropertiesPanel  matlab.ui.container.Panel
-        ViewVariablePropertiesGridTemplate  matlab.ui.container.GridLayout
-        ViewXAxispropertiesPanel     matlab.ui.container.Panel
-        VIewShowAllXAxis             matlab.ui.control.StateButton
-        XLimEditFieldLabel           matlab.ui.control.Label
-        ViewXLim                     matlab.ui.control.NumericEditField
-        ViewSaveOptionsPanel         matlab.ui.container.Panel
-        ViewSaveSelectedOnly         matlab.ui.control.CheckBox
-        ViewSaveDataFormat           matlab.ui.container.ButtonGroup
-        ViewSaveMatButton            matlab.ui.control.RadioButton
-        ViewLog                      matlab.ui.control.TextArea
-        ViewSaveCSVButton            matlab.ui.control.RadioButton
-        AnalysisLog                  matlab.ui.control.TextArea
-        ViewSaveDataButton           matlab.ui.control.Button
-        ViewScreenshotButton         matlab.ui.control.Button
-        AnalysisOptionsTab           matlab.ui.container.Tab
-        OutputsGroup                 matlab.ui.container.TabGroup
-        ViewOutputsTab               matlab.ui.container.Tab
-        ViewFigureBoundary           matlab.ui.container.Panel
-        AnalysisOutputsTab           matlab.ui.container.Tab
-        AnalysisFigureBoundary       matlab.ui.container.Panel
-        DataInformation              matlab.ui.control.EditField
-        OutputsPanel                 matlab.ui.container.Panel
+        MainFIgure                    matlab.ui.Figure
+        GridLayout                    matlab.ui.container.GridLayout
+        OptionsPanel                  matlab.ui.container.Panel
+        AppTitle                      matlab.ui.control.Label
+        DataInformation               matlab.ui.control.EditField
+        OptionsGroup                  matlab.ui.container.TabGroup
+        DataOptionsTab                matlab.ui.container.Tab
+        DataLoadingOptionsPanel       matlab.ui.container.Panel
+        LoadDataButton                matlab.ui.control.Button
+        DataFormatButtonGroup         matlab.ui.container.ButtonGroup
+        LoadDATPatchMasterButton      matlab.ui.control.RadioButton
+        LoadMATDataTableButton        matlab.ui.control.RadioButton
+        LoadITXPatchMasterButton      matlab.ui.control.RadioButton
+        LoadMATPatchMasterButton      matlab.ui.control.RadioButton
+        LoadMATITXButton              matlab.ui.control.RadioButton
+        DataConverstionPanel          matlab.ui.container.Panel
+        ConvertITXtoMATButton         matlab.ui.control.Button
+        ConvertDATtoMATButton         matlab.ui.control.Button
+        DataLog                       matlab.ui.control.TextArea
+        ViewOptionsTab                matlab.ui.container.Tab
+        ViewProtocolAndSweepPanel     matlab.ui.container.Panel
+        ViewProtocolSelectionLabel    matlab.ui.control.Label
+        ViewProtocolSelection         matlab.ui.control.DropDown
+        ViewProtocolNameChanger       matlab.ui.control.Button
+        ViewPreviousProtocol          matlab.ui.control.Button
+        ViewNextProtocol              matlab.ui.control.Button
+        ViewSweepSelectionLabel       matlab.ui.control.Label
+        ViewSweepSelection            matlab.ui.control.EditField
+        ViewAllSweep                  matlab.ui.control.CheckBox
+        VIewPreviousSweep             matlab.ui.control.Button
+        ViewNextSweep                 matlab.ui.control.Button
+        ViewPlotPropertiesPanel       matlab.ui.container.Panel
+        VIewPlotNumberLabel           matlab.ui.control.Label
+        ViewPlotNumber                matlab.ui.control.DropDown
+        ViewPlotHeightRatioLabel      matlab.ui.control.Label
+        ViewPlotHeightRatio           matlab.ui.control.EditField
+        ViewVariableSelectionPanel    matlab.ui.container.Panel
+        ViewVariableGrid              matlab.ui.container.GridLayout
+        ViewVariable_1                matlab.ui.control.DropDown
+        ViewVariable_2                matlab.ui.control.DropDown
+        ViewVariable_3                matlab.ui.control.DropDown
+        ViewVariable_4                matlab.ui.control.DropDown
+        ViewVariable_5                matlab.ui.control.DropDown
+        ViewVariable_6                matlab.ui.control.DropDown
+        ViewVariable_7                matlab.ui.control.DropDown
+        ViewVariable_8                matlab.ui.control.DropDown
+        ViewVariable_9                matlab.ui.control.DropDown
+        ViewVariablePropertiesPanel   matlab.ui.container.Panel
+        ViewVariableOrignalNameLabel  matlab.ui.control.Label
+        ViewVariableOrignalName       matlab.ui.control.DropDown
+        ViewVariableNewNameLabel      matlab.ui.control.Label
+        ViewVariableNewName           matlab.ui.control.EditField
+        ViewVariableColorButton       matlab.ui.control.Button
+        ViewVariableSaveButton        matlab.ui.control.StateButton
+        ViewVariableYLimLabel         matlab.ui.control.Label
+        ViewVariableYLimLowerBound    matlab.ui.control.NumericEditField
+        ViewVariableYLimUpperBound    matlab.ui.control.NumericEditField
+        ViewVariableYLimAuto          matlab.ui.control.CheckBox
+        ViewXAxispropertiesPanel      matlab.ui.container.Panel
+        VIewShowAllXAxis              matlab.ui.control.StateButton
+        ViewVariableXLimLabel         matlab.ui.control.Label
+        ViewVariableXLimLowerBound    matlab.ui.control.NumericEditField
+        ViewVariableXLimUpperBound    matlab.ui.control.NumericEditField
+        ViewVariableXLimAuto          matlab.ui.control.CheckBox
+        ViewSaveOptionsPanel          matlab.ui.container.Panel
+        ViewSaveSelectedOnly          matlab.ui.control.CheckBox
+        ViewSaveDataFormat            matlab.ui.container.ButtonGroup
+        ViewSaveMatButton             matlab.ui.control.RadioButton
+        ViewSaveCSVButton             matlab.ui.control.RadioButton
+        ViewSaveDataButton            matlab.ui.control.Button
+        ViewScreenshotButton          matlab.ui.control.Button
+        ViewLog                       matlab.ui.control.TextArea
+        AnalysisOptionsTab            matlab.ui.container.Tab
+        AnalysisLog                   matlab.ui.control.TextArea
+        OutputsPanel                  matlab.ui.container.Panel
+        OutputsGroup                  matlab.ui.container.TabGroup
+        ViewOutputsTab                matlab.ui.container.Tab
+        ViewFigureBoundary            matlab.ui.container.Panel
+        AnalysisOutputsTab            matlab.ui.container.Tab
+        AnalysisFigureBoundary        matlab.ui.container.Panel
     end
 
     % Properties that correspond to apps with auto-reflow
@@ -84,6 +95,13 @@
         current_data = struct;          % currently plotted data
         current_settings = struct;      % current settings/options
         current_variables = struct;     % current variables
+        
+        extopts = struct(...
+            'DataAlreadyZeroed_inputs', ...
+            {{'I know they ARE',...
+            'I know they are NOT', ...
+            'Unsure but let''s go with YES', ...
+            'Unsure but let''s go with NO'}});
     end
     
     properties (Access = public)
@@ -122,15 +140,17 @@
         end
         
         function updateLog(app, componentName, tag, newMessage)
-            tag = upper(tag); 
+            tag = upper(tag);
             app.(componentName).Value = [app.(componentName).Value; {sprintf('%s:\t%s', tag, newMessage)}];
-            switch tag 
+            switch tag
                 case {'WARNING', 'WARN'}
-                    uialert(app.MainFIgure, newMessage, 'Icon', 'warning'); 
+                    newMessage = [newMessage, 'Sorry, not sorry!'];
+                    uialert(app.MainFIgure, newMessage, 'Icon', 'warning');
                 case {'ERROR', 'ERR'}
-                    uialert(app.MainFIgure, newMessage, 'Icon', 'error'); 
-                otherwise, return; 
+                    newMessage = [newMessage, 'Actually, so sorry!'];
+                    uialert(app.MainFIgure, newMessage, 'Icon', 'error');
             end
+            
         end
         
         function initializeAfterLoadingData(app)
@@ -141,22 +161,180 @@
                 num2cell(app.data_table.Rec), app.data_table.Stimulus, ...
                 'uni', 0);
             app.current_settings.original_available_protocols = app.current_settings.available_protocols;
-            app.ProtocolSelectionMenu.String = app.current_settings.available_protocols;
-            app.ProtocolSelectionMenu.Value = selected_protocol_value;
             
-            app.NumberOfVariableMenu.String = 1:app.max_numplots;
-            app.ProtocolSelectionMenuChanged;
+            % ProtocolSelection
+            app.ViewProtocolSelection.Enable = 'on';
+            app.ViewProtocolNameChanger.Enable = 'on';
+            app.ViewNextProtocol.Enable = 'on';
+            app.ViewPreviousProtocol.Enable = 'on';
+            app.ViewProtocolSelection.Items = app.current_settings.available_protocols;
+            app.ViewProtocolSelection.ItemsData = app.data_table.Rec;
+            app.ViewProtocolSelection.Value = selected_protocol_value;
+            
+            
+            % ViewPlotNumber
+            app.ViewPlotNumber.Items = cellfun(@num2str, num2cell(1:app.view_max_numplots), 'uni', 0);
+            app.ViewPlotNumber.ItemsData = 1:app.view_max_numplots;
+            app.ViewPlotNumber.Enable = 'on';
+            
+            app.ViewProtocolSelectionChanged;
             
         end
         
-        function switchToViewTabs(app)            
+        function switchToViewTabs(app)
             app.OptionsGroup.SelectedTab = app.ViewOptionsTab;
-            app.OutputsGroup.SelectedTab = app.ViewOutputsTab; 
+            app.OutputsGroup.SelectedTab = app.ViewOutputsTab;
         end
         
-        function switchToAnalysTabs(app)            
+        function switchToAnalysTabs(app)
             app.OptionsGroup.SelectedTab = app.AnalysisOptionsTab;
-            app.OutputsGroup.SelectedTab = app.AnalysisOutputsTab; 
+            app.OutputsGroup.SelectedTab = app.AnalysisOutputsTab;
+        end
+        
+        function DataAlreadyZeroed_answer = promptDataAlreadyZeroedHEKAPatchMasterImporter(app, full_filename)
+            DataAlreadyZeroed_answer = listdlg('PromptString', ...
+                {'Do you know if data have already been zeroed?', full_filename, '', ''}, ...
+                'SelectionMode', 'single', ...
+                'ListString', app.extopts.DataAlreadyZeroed_inputs, ...
+                'ListSize', [300, 100]);
+            if isempty(DataAlreadyZeroed_answer)
+                DataAlreadyZeroed_answer = nan;
+            else
+                DataAlreadyZeroed_answer = DataAlreadyZeroed_answer == 1 || DataAlreadyZeroed_answer == 3;
+            end
+            
+        end
+        
+        function dTbl = getHEKAImportedDataTable(app, full_filename)
+            DataAlreadyZeroed_answer = app.promptDataAlreadyZeroedHEKAPatchMasterImporter(full_filename);
+            
+            if isnan(DataAlreadyZeroed_answer), dTbl = ''; return; end
+            
+            try
+                tmp_data = HEKA_Importer(full_filename, 'DataAlreadyZeroed', DataAlreadyZeroed_answer);
+            catch
+                app.updateLog('DataLog', 'ERROR', sprintf('HEKA_Importer could not load %s.', full_filename));
+            end
+            
+            if isempty(tmp_data.RecTable)
+                app.updateLog('DataLog', 'WARNING', 'The data table was empty. Nothing will be loaded in.');
+                return;
+            end
+            
+            dTbl = tmp_data.RecTable;
+        end
+        
+        function getRecordings(app, ind_rec)
+            
+            dt_ms = 1000/double(app.data_table.SR(ind_rec));
+            results = struct('channels', struct(), 'stimulus', struct(), ...
+                'dt_ms', dt_ms, 't', '', 'num_sweeps', double(app.data_table.nSweeps(ind_rec)));
+            
+            variable_names = struct;
+            current_varind = 1;
+            
+            % Get monitored channel data
+            channel_units = app.data_table.ChUnit{ind_rec};
+            channel_names = app.data_table.ChName{ind_rec};
+            channel_data  = app.data_table.dataRaw{ind_rec};
+            
+            num_channels = length(channel_data);
+            for ind_chan = 1:num_channels
+                chan_unit  = channel_units{ind_chan};
+                chan_datum = channel_data{ind_chan};
+                
+                switch upper(chan_unit)
+                    case 'A'
+                        chan_unit  = 'nA';
+                        chan_datum = chan_datum * 1e9;
+                        chan_ylim = [-4, 0.5];
+                    case 'V'
+                        chan_unit  = 'mV';
+                        chan_datum = chan_datum * 1e3;
+                        chan_ylim = [-90, 60];
+                    otherwise
+                        error('%s is not an acceptable channel unit as this point', chan_unit);
+                end
+                
+                channel_units{ind_chan} = chan_unit;
+                channel_data{ind_chan} = chan_datum;
+                
+                variable_names.(sprintf('var%d', current_varind)) = struct(...
+                    'original_name', channel_names{ind_chan}, ...
+                    'new_name', channel_names{ind_chan}, ...
+                    'identity', 'channels', ...
+                    'index', ind_chan, ...
+                    'unit', chan_unit, ...
+                    'save', 1, ...
+                    'color', 'k', ...
+                    'axes_indices', [], ...
+                    'ylim', chan_ylim ...
+                    );
+                current_varind = current_varind + 1;
+            end
+            
+            results.channels.names = channel_names;
+            results.channels.units = channel_units;
+            results.channels.data  = channel_data;
+            results.channels.num   = num_channels;
+            
+            % Get stimulus data
+            stim_data = app.data_table.stimWave{ind_rec};
+            stim_units = app.data_table.stimUnit{ind_rec};
+            stim_names = fieldnames(stim_data);
+            num_stims = length(stim_names);
+            stim_units = cellfun(@(x) x(1), stim_units, 'uni', 0);
+            
+            for ind_stim = 1:num_stims
+                variable_names.(sprintf('var%d', current_varind)) = struct(...
+                    'original_name', stim_names{ind_stim}, ...
+                    'new_name', stim_names{ind_stim}, ...
+                    'identity', 'stimulus', ...
+                    'index', ind_stim, ...
+                    'unit', stim_units{ind_stim}, ...
+                    'save', 1, ...
+                    'color', 'r', ...
+                    'axes_indices', [], ...
+                    'ylim', 'auto' ...
+                    );
+                current_varind = current_varind + 1;
+            end
+            results.stimulus.names = stim_names;
+            results.stimulus.units = stim_units;
+            results.stimulus.data  = cellfun(@(x) stim_data.(x), stim_names, 'uni', 0);
+            results.stimulus.num   = num_stims;
+            
+            % Time vector
+            len_dat = size(channel_data{1},1);
+            results.t = dt_ms*(0:(len_dat-1));
+            
+            % Update properties of apps to save these data
+            app.current_data = results;
+            app.current_variables = variable_names;
+            
+            app.current_settings.xlim = 'auto';
+        end
+        
+        function results = showSelectedSweep(app)
+            
+        end
+        
+        function ViewAllSweepTickedInitialized(app)
+            if app.ViewAllSweep.Value == 1
+                sweep_selection_choice = 'off';
+                if isfield(app.current_data, 'num_sweeps')
+                    app.current_settings.sweeps.selected = 1:app.current_settings.sweeps.max;
+                    app.ViewSweepSelection.Value = sprintf('1:%d', app.current_settings.sweeps.max);
+                end
+            else
+                sweep_selection_choice = 'on';
+                app.SweepSelectionInput.String = '1';
+                app.current_settings.sweeps.selected = 1;
+            end
+            
+            app.SweepSelectionInput.Enable = sweep_selection_choice;
+            app.SweepSelectionNextButton.Enable = sweep_selection_choice;
+            app.SweepSelectionPreviousButton.Enable = sweep_selection_choice;
         end
     end
     
@@ -174,7 +352,7 @@
             
             [file_format, file_source] = app.getLoadDataFormat;
             [file_name, file_path] = uigetfile(fullfile(file_path,['*.' file_format]), ...
-                sprintf('Select a %s file to read', upper(file_format)));
+                sprintf('Select a %s file to read', upper(file_format)), 'MultiSelect',"off");
             
             if file_name == 0, return; end
             
@@ -189,28 +367,9 @@
             full_filename = fullfile(file_path, file_name);
             switch file_source
                 case 'PATCHMASTER::DAT'
-                    DataAlreadyZeroed_inputoptions = {'I know they ARE',...
-                        'I know they are NOT', ...
-                        'Unsure but let''s go with YES', ...
-                        'Unsure but let''s go with NO'};
-                    DataAlreadyZeroed_answer = listdlg('PromptString', ...
-                        'Do you know if data have already been zeroed?', ...
-                        'SelectionMode', 'single', ...
-                        'ListString', DataAlreadyZeroed_inputoptions);
-                    DataAlreadyZeroed_answer = DataAlreadyZeroed_answer == 1 || DataAlreadyZeroed_answer == 3;
-                    
-                    try
-                        tmp_data = HEKA_Importer(full_filename, 'DataAlreadyZeroed', DataAlreadyZeroed_answer);
-                    catch
-                        app.updateLog('DataLog', 'ERROR', sprintf('HEKA_Importer could not load %s.', full_filename));
-                    end
-                    
-                    if isempty(tmp_data.RecTable)
-                        app.updateLog('DataLog', 'WARNING', 'The data table was empty. Nothing will be loaded in.');
-                        return;
-                    end
-                    app.data_table = tmp_data.RecTable;
-                    
+                    tmpdTbl = app.getHEKAImportedDataTable(full_filename);
+                    if isempty(tmpdTbl), return; end
+                    app.data_table = tmpdTbl;
                 case 'PATCHMASTER::DAT->HEKAEXPLORER::MAT'
                     tmp_data = load(full_filename, 'data_table');
                     app.data_table = tmp_data.data_table;
@@ -218,35 +377,124 @@
                     app.updateLog('DataLog', 'WARNING', 'The file source option is either invalid or unimplemented for reading. Nothing will be loaded in.');
             end
             
-            
             app.DataInformation.Value = file_name;
             app.updateLog('DataLog', 'DATA', sprintf('File "%s" loaded.', full_filename));
             app.updateLog('DataLog', 'TIPS', 'Now you can click on the other tabs to toy around.');
             
             % Initialize
+            app.switchToViewTabs;
             app.initializeAfterLoadingData;
-            app.switchToViewTabs; 
             
         end
 
         % Button pushed function: ConvertDATtoMATButton
         function ConvertDATtoMATButtonPushed(app, event)
+            sel_opts = {'Save the loaded DAT as MAT','Convert other DAT files','Cancel'};
+            selection = uiconfirm(app.MainFIgure,'Do you want to convert the loaded data?', 'Convert DAT to MAT',...
+                'Options', sel_opts, 'DefaultOption',1,'CancelOption',3);
             
-            if isempty(app.data_table) || isempty(app.current_settings.file_path)
-                app.SaveMATTableText.String = 'no data to save';
-                return;
+            
+            switch selection
+                case sel_opts{1}
+                    if isempty(app.data_table)
+                        app.updateLog('DataLog', 'WARNING', 'Empty data table. Please load the data again. Nothing will be saved.');
+                        return;
+                    end
+                    
+                    [save_datatable_name, save_datatable_path] = uiputfile('.mat', ...
+                        'Select a home for the MAT data table file', ...
+                        sprintf('%s.mat', fullfile(app.current_settings.file_path, app.current_settings.file_name(1:end-4))));
+                    
+                    if save_datatable_name == 0, return; end
+                    save_filename = fullfile(save_datatable_path, save_datatable_name);
+                    data_table = app.data_table; %#ok<ADPROPLC>
+                    save(save_filename, 'data_table');
+                    app.updateLog('DataLog', 'DATA', sprintf('"%s" was saved at %s', save_datatable_name, save_datatable_path));
+                case sel_opts{2}
+                    if ~isfield(app.current_settings, 'file_path')
+                        file_path = pwd;
+                    else
+                        file_path = app.current_settings.file_path;
+                    end
+                    
+                    [file_names, file_path] = uigetfile(fullfile(file_path,'*.dat'), ...
+                        sprintf('Select a %s file to read', 'MAT'), 'MultiSelect',"on");
+                    if isnumeric(file_path), return; end
+                    if ischar(file_names), file_names = {file_names}; end
+                    for ind_file = 1:length(file_names)
+                        full_filename = fullfile(file_path, file_names{ind_file});
+                        data_table = app.getHEKAImportedDataTable(full_filename);  %#ok<ADPROPLC>
+                        if isempty(data_table)  %#ok<ADPROPLC>
+                            app.updateLog('DataLog', 'WARNING', 'You missed an important selections along the way. Nothing converted.')
+                            return;
+                        end
+                        
+                        [save_datatable_name, save_datatable_path] = uiputfile('.mat', ...
+                            'Select a home for the MAT data table file', ...
+                            sprintf('%s.mat', full_filename(1:end-4)));
+                        
+                        if save_datatable_name == 0, return; end
+                        save_filename = fullfile(save_datatable_path, save_datatable_name);
+                        save(save_filename, 'data_table');
+                        app.updateLog('DataLog', 'DATA', sprintf('"%s" was saved at %s', save_datatable_name, save_datatable_path));
+                    end
+                case sel_opts{3}
+                    return;
             end
             
-            [save_datatable_name, save_datatable_path] = uiputfile('.mat', ...
-                'Select a home for the MAT data table file', ...
-                sprintf('%s.mat', fullfile(app.current_settings.file_path, app.current_settings.file_name(1:end-4))));
+        end
+
+        % Button pushed function: ConvertITXtoMATButton
+        function ConvertITXtoMATButtonPushed(app, event)
+            app.updateLog('DataLog', 'WARNING', ['Nothing will be printed here for ITX->MAT conversion information. ' ...
+                'Direct your attention to the command window. Sorry, I''m too lazy to integrate it in']);
+            itx2mat;
+            app.updateLog('DataLog', 'DATA', ['Seems like it''s done. Hope it was successful. ' ...
+                'Again, go to the command window for more info']);
+        end
+
+        % Value changed function: ViewProtocolSelection
+        function ViewProtocolSelectionChanged(app, event)
+            % Get recordings from the selected protocol
+            selected_protocol_value = app.ViewProtocolSelection.Value;
             
-            if save_datatable_name == 0, return; end
-            save_filename = fullfile(save_datatable_path, save_datatable_name);
+            app.current_settings.protocol.value = selected_protocol_value;
+            app.current_settings.protocol.name = app.current_settings.available_protocols{selected_protocol_value};
             
-            data_table = app.data_table;
-            save(save_filename, 'data_table');
+            app.getRecordings(selected_protocol_value);
+            num_sweeps = app.current_data.num_sweeps;
+            app.current_settings.sweeps.max = num_sweeps;
             
+            % ViewSweepSelection
+            app.ViewAllSweep.Enable = 'on';
+            app.ViewAllSweep.Value = 1;
+            app.ViewAllSweepTickedInitialized;
+            app.ViewSweepSelection.Enable = 'on';
+            
+            var_names = struct2cell(structfun(@(x) x.original_name, app.current_variables, 'uni', 0));
+            app.NumberOfVariableMenu.Value = min(app.max_numplots, length(var_names));
+            
+            selected_varinds = (1:app.max_numplots)';
+            selected_varinds(selected_varinds > length(var_names)) = 1;
+            arrayfun(@(x,v) set(x, 'String', var_names, 'Value', v), ...
+                app.VariableSelection_MenuList, selected_varinds);
+            
+            app.NumberOfVariableMenuChanged;
+            
+            app.VariableManipulation_OriginalNameMenu.String = var_names;
+            app.VariableManipulation_OriginalNameMenu.Value = 1;
+            app.VariableManipulation_OriginalNameMenuChanged;
+            
+            app.XAxisLinkButton.Value = 1;
+            app.XAxisShowAllButton.Value = 0;
+            
+            app.plotTraces;
+        end
+
+        % Value changed function: ViewAllSweep
+        function ViewAllSweepTicked(app, event)
+            app.ViewAllSweepTickedInitialized;
+            app.showOnlySelectedSweep;
         end
 
         % Changes arrangement of the app based on UIFigure width
@@ -379,7 +627,7 @@
 
             % Create ConvertITXtoMATButton
             app.ConvertITXtoMATButton = uibutton(app.DataConverstionPanel, 'push');
-            app.ConvertITXtoMATButton.Enable = 'off';
+            app.ConvertITXtoMATButton.ButtonPushedFcn = createCallbackFcn(app, @ConvertITXtoMATButtonPushed, true);
             app.ConvertITXtoMATButton.Tooltip = {'Convert the .itx files to.mat files for easy reading. Can do batch mode as well.'};
             app.ConvertITXtoMATButton.Position = [33 15 140 22];
             app.ConvertITXtoMATButton.Text = 'Convert ITX to MAT';
@@ -393,6 +641,8 @@
 
             % Create DataLog
             app.DataLog = uitextarea(app.DataOptionsTab);
+            app.DataLog.FontName = 'Courier';
+            app.DataLog.FontSize = 9;
             app.DataLog.Enable = 'off';
             app.DataLog.Position = [12 10 324 115];
             app.DataLog.Value = {'Log'};
@@ -406,41 +656,29 @@
             app.ViewProtocolAndSweepPanel = uipanel(app.ViewOptionsTab);
             app.ViewProtocolAndSweepPanel.Title = 'Protocol and sweep selection';
             app.ViewProtocolAndSweepPanel.FontWeight = 'bold';
-            app.ViewProtocolAndSweepPanel.Position = [17 644 323 85];
+            app.ViewProtocolAndSweepPanel.Position = [18 644 323 85];
 
-            % Create ProtocolDropDownLabel
-            app.ProtocolDropDownLabel = uilabel(app.ViewProtocolAndSweepPanel);
-            app.ProtocolDropDownLabel.HorizontalAlignment = 'right';
-            app.ProtocolDropDownLabel.Enable = 'off';
-            app.ProtocolDropDownLabel.Position = [5 38 50 22];
-            app.ProtocolDropDownLabel.Text = 'Protocol';
+            % Create ViewProtocolSelectionLabel
+            app.ViewProtocolSelectionLabel = uilabel(app.ViewProtocolAndSweepPanel);
+            app.ViewProtocolSelectionLabel.HorizontalAlignment = 'right';
+            app.ViewProtocolSelectionLabel.Position = [5 38 50 22];
+            app.ViewProtocolSelectionLabel.Text = 'Protocol';
 
             % Create ViewProtocolSelection
             app.ViewProtocolSelection = uidropdown(app.ViewProtocolAndSweepPanel);
             app.ViewProtocolSelection.Items = {};
+            app.ViewProtocolSelection.ValueChangedFcn = createCallbackFcn(app, @ViewProtocolSelectionChanged, true);
             app.ViewProtocolSelection.Enable = 'off';
             app.ViewProtocolSelection.Tooltip = {'Select a protocol'};
             app.ViewProtocolSelection.Position = [63 38 145 22];
             app.ViewProtocolSelection.Value = {};
-
-            % Create SweepEditFieldLabel
-            app.SweepEditFieldLabel = uilabel(app.ViewProtocolAndSweepPanel);
-            app.SweepEditFieldLabel.HorizontalAlignment = 'right';
-            app.SweepEditFieldLabel.Enable = 'off';
-            app.SweepEditFieldLabel.Position = [13 10 42 22];
-            app.SweepEditFieldLabel.Text = 'Sweep';
-
-            % Create ViewSweepSelection
-            app.ViewSweepSelection = uieditfield(app.ViewProtocolAndSweepPanel, 'numeric');
-            app.ViewSweepSelection.Enable = 'off';
-            app.ViewSweepSelection.Position = [63 10 145 22];
 
             % Create ViewProtocolNameChanger
             app.ViewProtocolNameChanger = uibutton(app.ViewProtocolAndSweepPanel, 'push');
             app.ViewProtocolNameChanger.Enable = 'off';
             app.ViewProtocolNameChanger.Tooltip = {'Click here to change the name of the protocol'};
             app.ViewProtocolNameChanger.Position = [220 38 35 22];
-            app.ViewProtocolNameChanger.Text = '';
+            app.ViewProtocolNameChanger.Text = 'C';
 
             % Create ViewPreviousProtocol
             app.ViewPreviousProtocol = uibutton(app.ViewProtocolAndSweepPanel, 'push');
@@ -460,8 +698,20 @@
             app.ViewNextProtocol.Position = [291 38 25 22];
             app.ViewNextProtocol.Text = '▶';
 
+            % Create ViewSweepSelectionLabel
+            app.ViewSweepSelectionLabel = uilabel(app.ViewProtocolAndSweepPanel);
+            app.ViewSweepSelectionLabel.HorizontalAlignment = 'right';
+            app.ViewSweepSelectionLabel.Position = [13 10 42 22];
+            app.ViewSweepSelectionLabel.Text = 'Sweep';
+
+            % Create ViewSweepSelection
+            app.ViewSweepSelection = uieditfield(app.ViewProtocolAndSweepPanel, 'text');
+            app.ViewSweepSelection.Enable = 'off';
+            app.ViewSweepSelection.Position = [63 10 145 22];
+
             % Create ViewAllSweep
             app.ViewAllSweep = uicheckbox(app.ViewProtocolAndSweepPanel);
+            app.ViewAllSweep.ValueChangedFcn = createCallbackFcn(app, @ViewAllSweepTicked, true);
             app.ViewAllSweep.Enable = 'off';
             app.ViewAllSweep.Tooltip = {'Click all to plot all weeps '};
             app.ViewAllSweep.Text = ' all';
@@ -490,41 +740,39 @@
             app.ViewPlotPropertiesPanel.Title = 'Plot properties';
             app.ViewPlotPropertiesPanel.FontWeight = 'bold';
             app.ViewPlotPropertiesPanel.Scrollable = 'on';
-            app.ViewPlotPropertiesPanel.Position = [17 579 323 55];
+            app.ViewPlotPropertiesPanel.Position = [18 577 323 55];
 
-            % Create NunberDropDownLabel
-            app.NunberDropDownLabel = uilabel(app.ViewPlotPropertiesPanel);
-            app.NunberDropDownLabel.HorizontalAlignment = 'right';
-            app.NunberDropDownLabel.Enable = 'off';
-            app.NunberDropDownLabel.Position = [10 7 40 22];
-            app.NunberDropDownLabel.Text = 'Nunber';
+            % Create VIewPlotNumberLabel
+            app.VIewPlotNumberLabel = uilabel(app.ViewPlotPropertiesPanel);
+            app.VIewPlotNumberLabel.HorizontalAlignment = 'right';
+            app.VIewPlotNumberLabel.Position = [10 7 40 22];
+            app.VIewPlotNumberLabel.Text = 'Nunber';
 
             % Create ViewPlotNumber
             app.ViewPlotNumber = uidropdown(app.ViewPlotPropertiesPanel);
-            app.ViewPlotNumber.Items = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
-            app.ViewPlotNumber.ItemsData = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+            app.ViewPlotNumber.Items = {};
             app.ViewPlotNumber.Enable = 'off';
             app.ViewPlotNumber.Tooltip = {'maximum 9 plots'};
             app.ViewPlotNumber.Position = [56 7 44 22];
-            app.ViewPlotNumber.Value = '1';
+            app.ViewPlotNumber.Value = {};
 
-            % Create HeightratioEditFieldLabel
-            app.HeightratioEditFieldLabel = uilabel(app.ViewPlotPropertiesPanel);
-            app.HeightratioEditFieldLabel.HorizontalAlignment = 'right';
-            app.HeightratioEditFieldLabel.Position = [110 7 67 22];
-            app.HeightratioEditFieldLabel.Text = 'Height ratio';
+            % Create ViewPlotHeightRatioLabel
+            app.ViewPlotHeightRatioLabel = uilabel(app.ViewPlotPropertiesPanel);
+            app.ViewPlotHeightRatioLabel.HorizontalAlignment = 'right';
+            app.ViewPlotHeightRatioLabel.Position = [105 7 67 22];
+            app.ViewPlotHeightRatioLabel.Text = 'Height ratio';
 
-            % Create ViewPlotHeighRatio
-            app.ViewPlotHeighRatio = uieditfield(app.ViewPlotPropertiesPanel, 'numeric');
-            app.ViewPlotHeighRatio.Enable = 'off';
-            app.ViewPlotHeighRatio.Position = [182 7 135 22];
+            % Create ViewPlotHeightRatio
+            app.ViewPlotHeightRatio = uieditfield(app.ViewPlotPropertiesPanel, 'text');
+            app.ViewPlotHeightRatio.Enable = 'off';
+            app.ViewPlotHeightRatio.Position = [177 7 134 22];
 
             % Create ViewVariableSelectionPanel
             app.ViewVariableSelectionPanel = uipanel(app.ViewOptionsTab);
             app.ViewVariableSelectionPanel.Title = 'Variable selections for plotting';
             app.ViewVariableSelectionPanel.FontWeight = 'bold';
             app.ViewVariableSelectionPanel.Scrollable = 'on';
-            app.ViewVariableSelectionPanel.Position = [17 433 323 131];
+            app.ViewVariableSelectionPanel.Position = [18 434 323 131];
 
             % Create ViewVariableGrid
             app.ViewVariableGrid = uigridlayout(app.ViewVariableSelectionPanel);
@@ -617,45 +865,107 @@
             app.ViewVariablePropertiesPanel.Title = 'Variable properties';
             app.ViewVariablePropertiesPanel.FontWeight = 'bold';
             app.ViewVariablePropertiesPanel.Scrollable = 'on';
-            app.ViewVariablePropertiesPanel.Position = [17 310 323 105];
+            app.ViewVariablePropertiesPanel.Position = [18 310 323 113];
 
-            % Create ViewVariablePropertiesGridTemplate
-            app.ViewVariablePropertiesGridTemplate = uigridlayout(app.ViewVariablePropertiesPanel);
-            app.ViewVariablePropertiesGridTemplate.ColumnWidth = {90, 100, 20, 20, 30};
-            app.ViewVariablePropertiesGridTemplate.RowHeight = {20};
-            app.ViewVariablePropertiesGridTemplate.Scrollable = 'on';
+            % Create ViewVariableOrignalNameLabel
+            app.ViewVariableOrignalNameLabel = uilabel(app.ViewVariablePropertiesPanel);
+            app.ViewVariableOrignalNameLabel.Position = [7 67 80 22];
+            app.ViewVariableOrignalNameLabel.Text = 'Original name';
+
+            % Create ViewVariableOrignalName
+            app.ViewVariableOrignalName = uidropdown(app.ViewVariablePropertiesPanel);
+            app.ViewVariableOrignalName.Items = {};
+            app.ViewVariableOrignalName.Enable = 'off';
+            app.ViewVariableOrignalName.Position = [7 44 96 22];
+            app.ViewVariableOrignalName.Value = {};
+
+            % Create ViewVariableNewNameLabel
+            app.ViewVariableNewNameLabel = uilabel(app.ViewVariablePropertiesPanel);
+            app.ViewVariableNewNameLabel.Position = [113 67 63 22];
+            app.ViewVariableNewNameLabel.Text = 'New name';
+
+            % Create ViewVariableNewName
+            app.ViewVariableNewName = uieditfield(app.ViewVariablePropertiesPanel, 'text');
+            app.ViewVariableNewName.Enable = 'off';
+            app.ViewVariableNewName.Position = [113 44 108 22];
+
+            % Create ViewVariableColorButton
+            app.ViewVariableColorButton = uibutton(app.ViewVariablePropertiesPanel, 'push');
+            app.ViewVariableColorButton.Enable = 'off';
+            app.ViewVariableColorButton.Position = [113 13 44 22];
+            app.ViewVariableColorButton.Text = 'Color';
+
+            % Create ViewVariableSaveButton
+            app.ViewVariableSaveButton = uibutton(app.ViewVariablePropertiesPanel, 'state');
+            app.ViewVariableSaveButton.Enable = 'off';
+            app.ViewVariableSaveButton.Text = 'Save';
+            app.ViewVariableSaveButton.Position = [165 13 44 22];
+
+            % Create ViewVariableYLimLabel
+            app.ViewVariableYLimLabel = uilabel(app.ViewVariablePropertiesPanel);
+            app.ViewVariableYLimLabel.Position = [233 67 33 22];
+            app.ViewVariableYLimLabel.Text = 'YLim';
+
+            % Create ViewVariableYLimLowerBound
+            app.ViewVariableYLimLowerBound = uieditfield(app.ViewVariablePropertiesPanel, 'numeric');
+            app.ViewVariableYLimLowerBound.Enable = 'off';
+            app.ViewVariableYLimLowerBound.Position = [232 44 40 22];
+
+            % Create ViewVariableYLimUpperBound
+            app.ViewVariableYLimUpperBound = uieditfield(app.ViewVariablePropertiesPanel, 'numeric');
+            app.ViewVariableYLimUpperBound.Enable = 'off';
+            app.ViewVariableYLimUpperBound.Position = [277 44 40 22];
+
+            % Create ViewVariableYLimAuto
+            app.ViewVariableYLimAuto = uicheckbox(app.ViewVariablePropertiesPanel);
+            app.ViewVariableYLimAuto.Enable = 'off';
+            app.ViewVariableYLimAuto.Text = 'auto';
+            app.ViewVariableYLimAuto.FontSize = 10;
+            app.ViewVariableYLimAuto.Position = [272 73 41 16];
+            app.ViewVariableYLimAuto.Value = true;
 
             % Create ViewXAxispropertiesPanel
             app.ViewXAxispropertiesPanel = uipanel(app.ViewOptionsTab);
             app.ViewXAxispropertiesPanel.Title = 'X-axis properties';
             app.ViewXAxispropertiesPanel.FontWeight = 'bold';
-            app.ViewXAxispropertiesPanel.Position = [18 210 117 89];
+            app.ViewXAxispropertiesPanel.Position = [18 184 117 115];
 
             % Create VIewShowAllXAxis
             app.VIewShowAllXAxis = uibutton(app.ViewXAxispropertiesPanel, 'state');
             app.VIewShowAllXAxis.Enable = 'off';
             app.VIewShowAllXAxis.Text = 'Show all X-axis';
-            app.VIewShowAllXAxis.Position = [7 40 100 22];
+            app.VIewShowAllXAxis.Position = [7 66 100 22];
             app.VIewShowAllXAxis.Value = true;
 
-            % Create XLimEditFieldLabel
-            app.XLimEditFieldLabel = uilabel(app.ViewXAxispropertiesPanel);
-            app.XLimEditFieldLabel.HorizontalAlignment = 'right';
-            app.XLimEditFieldLabel.Enable = 'off';
-            app.XLimEditFieldLabel.Position = [11 11 33 22];
-            app.XLimEditFieldLabel.Text = 'XLim';
+            % Create ViewVariableXLimLabel
+            app.ViewVariableXLimLabel = uilabel(app.ViewXAxispropertiesPanel);
+            app.ViewVariableXLimLabel.Position = [23 40 39 22];
+            app.ViewVariableXLimLabel.Text = 'XLims';
 
-            % Create ViewXLim
-            app.ViewXLim = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
-            app.ViewXLim.Enable = 'off';
-            app.ViewXLim.Position = [52 12 55 21];
+            % Create ViewVariableXLimLowerBound
+            app.ViewVariableXLimLowerBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
+            app.ViewVariableXLimLowerBound.Enable = 'off';
+            app.ViewVariableXLimLowerBound.Position = [22 13 40 22];
+
+            % Create ViewVariableXLimUpperBound
+            app.ViewVariableXLimUpperBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
+            app.ViewVariableXLimUpperBound.Enable = 'off';
+            app.ViewVariableXLimUpperBound.Position = [67 13 40 22];
+
+            % Create ViewVariableXLimAuto
+            app.ViewVariableXLimAuto = uicheckbox(app.ViewXAxispropertiesPanel);
+            app.ViewVariableXLimAuto.Enable = 'off';
+            app.ViewVariableXLimAuto.Text = 'auto';
+            app.ViewVariableXLimAuto.FontSize = 10;
+            app.ViewVariableXLimAuto.Position = [66 42 41 16];
+            app.ViewVariableXLimAuto.Value = true;
 
             % Create ViewSaveOptionsPanel
             app.ViewSaveOptionsPanel = uipanel(app.ViewOptionsTab);
             app.ViewSaveOptionsPanel.Title = 'Save options';
             app.ViewSaveOptionsPanel.FontWeight = 'bold';
             app.ViewSaveOptionsPanel.Scrollable = 'on';
-            app.ViewSaveOptionsPanel.Position = [146 189 194 111];
+            app.ViewSaveOptionsPanel.Position = [147 188 194 111];
 
             % Create ViewSaveSelectedOnly
             app.ViewSaveSelectedOnly = uicheckbox(app.ViewSaveOptionsPanel);
@@ -693,6 +1003,8 @@
 
             % Create ViewLog
             app.ViewLog = uitextarea(app.ViewOptionsTab);
+            app.ViewLog.FontName = 'Courier';
+            app.ViewLog.FontSize = 9;
             app.ViewLog.Enable = 'off';
             app.ViewLog.Position = [12 10 324 115];
             app.ViewLog.Value = {'Log'};
@@ -704,6 +1016,8 @@
 
             % Create AnalysisLog
             app.AnalysisLog = uitextarea(app.AnalysisOptionsTab);
+            app.AnalysisLog.FontName = 'Courier';
+            app.AnalysisLog.FontSize = 9;
             app.AnalysisLog.Enable = 'off';
             app.AnalysisLog.Position = [12 10 324 115];
             app.AnalysisLog.Value = {'Log'};
