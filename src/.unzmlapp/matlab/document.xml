@@ -75,6 +75,7 @@
         ViewSaveDataButton            matlab.ui.control.Button
         ViewScreenshotButton          matlab.ui.control.Button
         ViewLog                       matlab.ui.control.TextArea
+        ViewPlotReadyButton           matlab.ui.control.StateButton
         AnalysisOptionsTab            matlab.ui.container.Tab
         AnalysisLog                   matlab.ui.control.TextArea
         OutputsPanel                  matlab.ui.container.Panel
@@ -329,28 +330,18 @@
             selected_plotvars = [app.ViewVariableGrid.Children(1:num_plots).Value];
             
             delete(app.ViewFigureBoundary.Children);
-            %             delete(app.ViewAxes);
+            delete(app.ViewAxes);
             
-            view_positions = app.ViewFigureBoundary.Position;
-            view_width = view_positions(3);
-            view_height = view_positions(4);
             ax_heights = app.current_settings.plot.height_ratio * (1 - app.axes_bottom_margin - app.axes_top_margin);
             ax_bottoms = 1 - cumsum(ax_heights) - app.axes_top_margin;
             ax_left = app.axes_left_margin;
             ax_width = 1 - app.axes_left_margin - app.axes_right_margin;
             
-            %             ax_heights = ax_heights * view_height;
-            %             ax_bottoms = ax_bottoms * view_height;
-            %             ax_left = ax_left * view_width;
-            %             ax_width = ax_width * view_width;
-            %
-            %             app.ViewAxes = arrayfun(@(b,h) uiaxes(app.ViewFigureBoundary, ...
-            %                 'Position', [ax_left,b,ax_width,h] ),ax_bottoms, ax_heights);
             app.ViewAxes = arrayfun(@(b,h) axes(app.ViewFigureBoundary, ...
                 'Position', [ax_left,b,ax_width,h] ),ax_bottoms, ax_heights);
             
             arrayfun(@(ax) set(ax.Toolbar, 'Visible', 'on'), app.ViewAxes);
-            arrayfun(@(ax) set(ax, 'Interactions', [zoomInteraction regionZoomInteraction dataTipInteraction]), app.ViewAxes);
+            arrayfun(@(ax) set(ax, 'Interactions', []), app.ViewAxes);
             
             dt_ms = app.current_data.dt_ms;
             
@@ -419,15 +410,14 @@
                 app.current_variables.(var_id).axes_indices = unique([cur_ax_inds, ind_plt]);
                 
             end
-            
-            xlim(app.ViewAxes(ind_plt), app.current_settings.xlim);
             drawnow;
+            xlim(app.ViewAxes(ind_plt), app.current_settings.xlim);
             linkaxes(app.ViewAxes, 'x');
-            
             app.ViewShowAllXAxisChanged;
+            
         end
         
-        function showOnlySelectedSweep(app)
+        function showViewPlotOnlySelectedSweep(app)
             selected_sweeps = app.current_settings.sweeps.selected;
             num_plots = app.current_settings.plot.num;
             for ind_plt = 1:num_plots
@@ -472,18 +462,19 @@
         
         function changeViewVariableColorShowerHTML(app, new_color)
             if ischar(new_color), new_color = str2colorvec(new_color); end
-            new_color = floor(255*new_color);
-            color_string = sprintf('rgb(%d,%d,%d)', new_color(1), new_color(2), new_color(3));
+            new_color_8bit = floor(255*new_color);
+            color_string = sprintf('rgb(%d,%d,%d)', new_color_8bit(1), new_color_8bit(2), new_color_8bit(3));
             app.ViewVariableColorShower.HTMLSource = ['<body scroll="no" style="overflow: hidden"">' ...
                 '<div id="rectangle" style="background-color:' color_string ...
                 ';border-radius:6px;width:18px;height:18px">  </div></body>'];
+            app.ViewVariableColorShower.Data = new_color;
             
         end
         
         function changeViewPlotRatios(app)
             ax_heights = app.current_settings.plot.height_ratio * (1 - app.axes_bottom_margin - app.axes_top_margin);
             ax_bottoms = 1 - cumsum(ax_heights) - app.axes_top_margin;
-            arrayfun(@(ax, b,h) set(ax, 'Position', [ax.Position(1),b,ax.Position(3),h]), ...
+            arrayfun(@(ax,b,h) set(ax, 'Position', [ax.Position(1),b,ax.Position(3),h]), ...
                 app.ViewAxes, ax_bottoms, ax_heights);
         end
         
@@ -492,7 +483,7 @@
             common_warning_message = ['There was a problem with the height ratio. It was supposed to be ' ...
                 'either "auto", "equal" or a valid numeric vector of length equal to the number of plots. ' ...
                 'Because of this, will fall back to equally spaced subplots.'];
-            auto_mode_on = false; 
+            auto_mode_on = false;
             if strcmpi(value, 'auto') || strcmpi(value, 'equal')
                 auto_mode_on = true;
                 value = ones(1, num_plots);
@@ -503,13 +494,32 @@
                 app.updateLog('ViewLog', 'WARNING', common_warning_message);
                 value = ones(1, num_plots);
                 auto_mode_on = true;
-                app.ViewPlotHeightRatio.Value = 'auto'; 
+                app.ViewPlotHeightRatio.Value = 'auto';
             end
             value = value/sum(value);
             app.current_settings.plot.height_ratio = value;
             if ~auto_mode_on
-                app.ViewPlotHeightRatio.Value = vec2str(value, '%.2f', ''); 
+                app.ViewPlotHeightRatio.Value = vec2str(value, '%.2f', '');
             end
+        end
+        
+        function updateViewPlotSelectedYLimChanged(app, var_id, new_ylim)
+            cur_ylim = app.current_variables.(var_id).ylim;
+            
+            if isequal(new_ylim, cur_ylim), return; end
+            
+            app.current_variables.(var_id).ylim = new_ylim;
+            ax_inds = app.current_variables.(var_id).axes_indices;
+            
+            for ind_plt = ax_inds
+                yyaxis_option = 'left';
+                if mod(ind_plt,2) == 0
+                    yyaxis_option = 'right';
+                end
+                yyaxis(app.ViewAxes(ind_plt), yyaxis_option);
+                ylim(app.ViewAxes(ind_plt), new_ylim);
+            end
+            
         end
     end
     
@@ -523,6 +533,8 @@
         function startupFcn(app)
             app.MainFigure.WindowState = 'normal';
             pause(0.01);
+            %             app.MainFigure.Resize = 'off';
+            %             app.MainFigure.SizeChangedFcn = '';
         end
 
         % Button pushed function: LoadDataButton
@@ -628,10 +640,10 @@
         % Button pushed function: ConvertITXtoMATButton
         function ConvertITXtoMATButtonPushed(app, event)
             app.updateLog('DataLog', 'WARNING', ['Nothing will be printed here for ITX->MAT conversion information. ' ...
-                'Direct your attention to the command window. Sorry, I''m too lazy to integrate it in']);
+                'Direct your attention to the command window. Sorry, I''m too lazy to integrate it in.']);
             itx2mat;
             app.updateLog('DataLog', 'DATA', ['Seems like it''s done. Hope it was successful. ' ...
-                'Again, go to the command window for more info']);
+                'Again, go to the command window for more info.']);
         end
 
         % Value changed function: ViewProtocolSelection
@@ -705,7 +717,7 @@
         % Value changed function: ViewAllSweep
         function ViewAllSweepTicked(app, event)
             app.ViewAllSweepTickedInitialized;
-            app.showOnlySelectedSweep;
+            app.showViewPlotOnlySelectedSweep;
         end
 
         % Value changed function: ViewPlotNumber
@@ -723,11 +735,11 @@
             
             plot_height_ratios = app.ViewPlotHeightRatio.Value;
             if ~(strcmpi(plot_height_ratios, 'auto') || strcmpi(plot_height_ratios, 'equal'))
-                app.updateLog('ViewLog', 'WARNING', ['Since you changed the number of plots with ' ...
+                app.updateLog('ViewLog', 'INFO', ['Since you changed the number of plots with ' ...
                     'customized height ratios for plots, the height ratio mode will go back to "auto".']);
-                app.ViewPlotHeightRatio.Value = 'auto';
-                app.calculateViewPlotHeightRatio('auto');
             end
+            app.ViewPlotHeightRatio.Value = 'auto';
+            app.calculateViewPlotHeightRatio('auto');
             app.plotViewAxes;
         end
 
@@ -762,7 +774,11 @@
             app.ViewVariableYLimLowerBound.Enable = value_mode;
             app.ViewVariableYLimUpperBound.Enable = value_mode;
             
-            % TODO: implement YLim changes
+            new_ylim = app.convert_axislim_string2double(app.VariableManipulation_YLimInput);
+            selected_ind = app.ViewVariableOrignalName.Value;
+            var_id = sprintf('var%d', selected_ind);
+            
+            app.updateViewPlotSelectedYLimChanged(var_id, new_ylim);
         end
 
         % Value changed function: ViewShowAllXAxis
@@ -849,7 +865,7 @@
             
             app.current_settings.sweeps.selected = input_vals;
             
-            app.showOnlySelectedSweep;
+            app.showViewPlotOnlySelectedSweep;
             
         end
 
@@ -866,7 +882,7 @@
             app.ViewSweepSelection.Value = sprintf('%d', selected_sweep_index);
             app.current_settings.sweeps.selected = selected_sweep_index;
             
-            app.showOnlySelectedSweep;
+            app.showViewPlotOnlySelectedSweep;
         end
 
         % Button pushed function: ViewPreviousSweep
@@ -881,7 +897,78 @@
             app.ViewSweepSelection.Value = sprintf('%d', selected_sweep_index);
             app.current_settings.sweeps.selected = selected_sweep_index;
             
-            app.showOnlySelectedSweep;
+            app.showViewPlotOnlySelectedSweep;
+        end
+
+        % Value changed function: ViewPlotReadyButton
+        function ViewPlotReadyChanged(app, event)
+            value = app.ViewPlotReadyButton.Value;
+            if value == 1
+                app.plotViewAxes;
+            end
+        end
+
+        % Value changed function: ViewVariable_1, ViewVariable_2, 
+        % ViewVariable_3, ViewVariable_4, ViewVariable_5, 
+        % ViewVariable_6, ViewVariable_7, ViewVariable_8, 
+        % ViewVariable_9
+        function ViewVariableSelectionChanged(app, event)
+            % for easy implementation, just refresh
+            % however, for performance, need to reconsider only
+            % refresh the changed variable selection
+            if app.ViewPlotReadyButton.Value == 1
+                app.plotViewAxes;
+            end
+        end
+
+        % Value changed function: ViewVariableNewName
+        function ViewVariableNewNameChanged(app, event)
+            new_name = app.ViewVariableNewName.Value;
+            current_varind = app.ViewVariableOrignalName.Value;
+            
+            var_id = sprintf('var%d', current_varind);
+            app.current_variables.(var_id).new_name = new_name;
+            original_name = app.current_variables.(var_id).original_name;
+            
+            if strcmp(original_name, new_name)
+                return;
+            end
+            
+            var_unit = app.current_variables.(var_id).unit;
+            var_axinds = app.current_variables.(var_id).axes_indices;
+            arrayfun(@(ax) ylabel(ax, sprintf('%s (%s) [%s]', ...
+                new_name, var_unit, original_name), 'Interpreter', 'none'), app.ViewAxes(var_axinds));
+        end
+
+        % Button pushed function: ViewVariableColorButton
+        function ViewVariableColorButtonPressed(app, event)
+            cur_color = app.ViewVariableColorShower.Data;
+            new_color = uisetcolor(cur_color);
+            if isequal(cur_color, new_color)
+                return;
+            end
+            
+            selected_ind = app.ViewVariableOrignalName.Value;
+            var_id = sprintf('var%d', selected_ind);
+            
+            app.changeViewVariableColorShowerHTML(new_color);
+            app.current_variables.(var_id).color = new_color;
+            
+            ax_inds = app.current_variables.(var_id).axes_indices;
+            
+            for ind_plt = ax_inds
+                yyaxis_option = 'left';
+                yaxis_ind_for_color = 1;
+                if mod(ind_plt,2) == 0
+                    yyaxis_option = 'right';
+                    yaxis_ind_for_color = 2;
+                end
+                
+                yyaxis(app.ViewAxes(ind_plt), yyaxis_option);
+                app.ViewAxes(ind_plt).YAxis(yaxis_ind_for_color).Color = new_color;
+                set(get(app.ViewAxes(ind_plt), 'children'), 'color', new_color);
+            end
+            
         end
 
         % Changes arrangement of the app based on UIFigure width
@@ -1177,6 +1264,7 @@
             % Create ViewVariable_1
             app.ViewVariable_1 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_1.Items = {};
+            app.ViewVariable_1.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_1.Enable = 'off';
             app.ViewVariable_1.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_1.Layout.Row = 1;
@@ -1186,6 +1274,7 @@
             % Create ViewVariable_2
             app.ViewVariable_2 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_2.Items = {};
+            app.ViewVariable_2.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_2.Enable = 'off';
             app.ViewVariable_2.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_2.Layout.Row = 1;
@@ -1195,6 +1284,7 @@
             % Create ViewVariable_3
             app.ViewVariable_3 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_3.Items = {};
+            app.ViewVariable_3.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_3.Enable = 'off';
             app.ViewVariable_3.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_3.Layout.Row = 1;
@@ -1204,6 +1294,7 @@
             % Create ViewVariable_4
             app.ViewVariable_4 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_4.Items = {};
+            app.ViewVariable_4.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_4.Enable = 'off';
             app.ViewVariable_4.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_4.Layout.Row = 2;
@@ -1213,6 +1304,7 @@
             % Create ViewVariable_5
             app.ViewVariable_5 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_5.Items = {};
+            app.ViewVariable_5.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_5.Enable = 'off';
             app.ViewVariable_5.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_5.Layout.Row = 2;
@@ -1222,6 +1314,7 @@
             % Create ViewVariable_6
             app.ViewVariable_6 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_6.Items = {};
+            app.ViewVariable_6.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_6.Enable = 'off';
             app.ViewVariable_6.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_6.Layout.Row = 2;
@@ -1231,6 +1324,7 @@
             % Create ViewVariable_7
             app.ViewVariable_7 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_7.Items = {};
+            app.ViewVariable_7.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_7.Enable = 'off';
             app.ViewVariable_7.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_7.Layout.Row = 3;
@@ -1240,6 +1334,7 @@
             % Create ViewVariable_8
             app.ViewVariable_8 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_8.Items = {};
+            app.ViewVariable_8.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_8.Enable = 'off';
             app.ViewVariable_8.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_8.Layout.Row = 3;
@@ -1249,6 +1344,7 @@
             % Create ViewVariable_9
             app.ViewVariable_9 = uidropdown(app.ViewVariableGrid);
             app.ViewVariable_9.Items = {};
+            app.ViewVariable_9.ValueChangedFcn = createCallbackFcn(app, @ViewVariableSelectionChanged, true);
             app.ViewVariable_9.Enable = 'off';
             app.ViewVariable_9.Tooltip = {'Select a variable to plot'};
             app.ViewVariable_9.Layout.Row = 3;
@@ -1282,11 +1378,13 @@
 
             % Create ViewVariableNewName
             app.ViewVariableNewName = uieditfield(app.ViewVariablePropertiesPanel, 'text');
+            app.ViewVariableNewName.ValueChangedFcn = createCallbackFcn(app, @ViewVariableNewNameChanged, true);
             app.ViewVariableNewName.Enable = 'off';
             app.ViewVariableNewName.Position = [113 44 108 22];
 
             % Create ViewVariableColorButton
             app.ViewVariableColorButton = uibutton(app.ViewVariablePropertiesPanel, 'push');
+            app.ViewVariableColorButton.ButtonPushedFcn = createCallbackFcn(app, @ViewVariableColorButtonPressed, true);
             app.ViewVariableColorButton.Enable = 'off';
             app.ViewVariableColorButton.Position = [113 13 44 22];
             app.ViewVariableColorButton.Text = 'Color';
@@ -1325,6 +1423,7 @@
             app.ViewVariableColorShower = uihtml(app.ViewVariablePropertiesPanel);
             app.ViewVariableColorShower.HTMLSource = '<body scroll="no" style="overflow: hidden""><div id="rectangle" style="background-color:rgb(200,200,200);border-radius:6px;width:18px;height:18px">  </div></body>';
             app.ViewVariableColorShower.Position = [163 14 20 20];
+            app.ViewVariableColorShower.Data = [0.784313725490196 0.784313725490196 0.000784313725490196];
 
             % Create ViewXAxispropertiesPanel
             app.ViewXAxispropertiesPanel = uipanel(app.ViewOptionsTab);
@@ -1411,6 +1510,14 @@
             app.ViewLog.Enable = 'off';
             app.ViewLog.Position = [12 10 324 115];
             app.ViewLog.Value = {'Log'};
+
+            % Create ViewPlotReadyButton
+            app.ViewPlotReadyButton = uibutton(app.ViewOptionsTab, 'state');
+            app.ViewPlotReadyButton.ValueChangedFcn = createCallbackFcn(app, @ViewPlotReadyChanged, true);
+            app.ViewPlotReadyButton.Tooltip = {'Prress this to indicate that you are done with the selections for plottiing '};
+            app.ViewPlotReadyButton.Text = 'I''m ready';
+            app.ViewPlotReadyButton.Position = [35 146 83 23];
+            app.ViewPlotReadyButton.Value = true;
 
             % Create AnalysisOptionsTab
             app.AnalysisOptionsTab = uitab(app.OptionsGroup);
