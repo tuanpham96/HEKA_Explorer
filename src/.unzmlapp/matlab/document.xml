@@ -107,12 +107,12 @@
     
     properties (Access = public)
         % TODO: turn these into PRIVATE after development
-        ViewAxes; 
-        AnalysisAxes; 
+        ViewAxes;
+        AnalysisAxes;
         axes_top_margin = 0.08;
         axes_bottom_margin = 0.1;
-        axes_left_margin = 0.1; 
-        axes_right_margin = 0.1; 
+        axes_left_margin = 0.1;
+        axes_right_margin = 0.1;
     end
     
     properties (Access = public)
@@ -156,10 +156,10 @@
             switch tag
                 case {'WARNING', 'WARN'}
                     newMessage = [newMessage, 'Sorry, not sorry!'];
-                    uialert(app.MainFigure, newMessage, 'Icon', 'warning');
+                    uialert(app.MainFigure, newMessage, '', 'Icon', 'warning');
                 case {'ERROR', 'ERR'}
                     newMessage = [newMessage, 'Actually, so sorry!'];
-                    uialert(app.MainFigure, newMessage, 'Icon', 'error');
+                    uialert(app.MainFigure, newMessage, '', 'Icon', 'error');
             end
             
         end
@@ -176,12 +176,9 @@
             % ProtocolSelection
             app.ViewProtocolSelection.Enable = 'on';
             app.ViewProtocolNameChanger.Enable = 'on';
-            app.ViewNextProtocol.Enable = 'on';
-            app.ViewPreviousProtocol.Enable = 'on';
             app.ViewProtocolSelection.Items = app.current_settings.available_protocols;
             app.ViewProtocolSelection.ItemsData = app.data_table.Rec;
             app.ViewProtocolSelection.Value = selected_protocol_value;
-            
             
             % ViewPlotNumber
             app.ViewPlotNumber.Items = cellfun(@num2str, num2cell(1:app.view_max_numplots), 'uni', 0);
@@ -332,27 +329,28 @@
             selected_plotvars = [app.ViewVariableGrid.Children(1:num_plots).Value];
             
             delete(app.ViewFigureBoundary.Children);
+            %             delete(app.ViewAxes);
             
             view_positions = app.ViewFigureBoundary.Position;
             view_width = view_positions(3);
-            view_height = view_positions(4); 
+            view_height = view_positions(4);
             ax_heights = app.current_settings.plot.height_ratio * (1 - app.axes_bottom_margin - app.axes_top_margin);
             ax_bottoms = 1 - cumsum(ax_heights) - app.axes_top_margin;
-            ax_left = app.axes_left_margin; 
-            ax_width = 1 - app.axes_left_margin - app.axes_right_margin; 
+            ax_left = app.axes_left_margin;
+            ax_width = 1 - app.axes_left_margin - app.axes_right_margin;
             
-%             ax_heights = ax_heights * view_height;  
-%             ax_bottoms = ax_bottoms * view_height; 
-%             ax_left = ax_left * view_width; 
-%             ax_width = ax_width * view_width;
-%             
-%             app.ViewAxes = arrayfun(@(b,h) uiaxes(app.ViewFigureBoundary, ...
-%                 'Position', [ax_left,b,ax_width,h] ),ax_bottoms, ax_heights);
+            %             ax_heights = ax_heights * view_height;
+            %             ax_bottoms = ax_bottoms * view_height;
+            %             ax_left = ax_left * view_width;
+            %             ax_width = ax_width * view_width;
+            %
+            %             app.ViewAxes = arrayfun(@(b,h) uiaxes(app.ViewFigureBoundary, ...
+            %                 'Position', [ax_left,b,ax_width,h] ),ax_bottoms, ax_heights);
             app.ViewAxes = arrayfun(@(b,h) axes(app.ViewFigureBoundary, ...
                 'Position', [ax_left,b,ax_width,h] ),ax_bottoms, ax_heights);
             
-            arrayfun(@(ax) set(ax.Toolbar, 'Visible', 'on'), app.ViewAxes); 
-            arrayfun(@(ax) set(ax, 'Interactions', [zoomInteraction regionZoomInteraction dataTipInteraction]), app.ViewAxes);  
+            arrayfun(@(ax) set(ax.Toolbar, 'Visible', 'on'), app.ViewAxes);
+            arrayfun(@(ax) set(ax, 'Interactions', [zoomInteraction regionZoomInteraction dataTipInteraction]), app.ViewAxes);
             
             dt_ms = app.current_data.dt_ms;
             
@@ -422,16 +420,36 @@
                 
             end
             
-            xlim(app.ViewAxes(ind_plt), app.current_settings.xlim); 
-            drawnow; 
-%             pause(0.01);
-            %linkaxes(app.ViewAxes, 'x');
+            xlim(app.ViewAxes(ind_plt), app.current_settings.xlim);
+            drawnow;
+            linkaxes(app.ViewAxes, 'x');
             
-%             app.ViewShowAllXAxis;
+            app.ViewShowAllXAxisChanged;
         end
         
-        function showSelectedSweep(app)
+        function showOnlySelectedSweep(app)
+            selected_sweeps = app.current_settings.sweeps.selected;
+            num_plots = app.current_settings.plot.num;
+            for ind_plt = 1:num_plots
+                line_tags = cellfun(@str2double, {app.ViewAxes(ind_plt).Children.Tag}, 'uni', 1);
+                shown_line_indices = arrayfun(@(x) any(x == selected_sweeps) || isnan(x), line_tags, 'uni', 1);
+                set(app.ViewAxes(ind_plt).Children(shown_line_indices), 'LineStyle', '-');
+                set(app.ViewAxes(ind_plt).Children(~shown_line_indices), 'LineStyle', 'none', 'Marker', 'none');
+            end
             
+            if length(selected_sweeps) ~= 1, return; end
+            max_nsweeps = app.current_settings.sweeps.max;
+            if selected_sweeps > 1
+                app.ViewPreviousSweep.Enable = 'on';
+            else
+                app.ViewPreviousSweep.Enable = 'off';
+            end
+            
+            if selected_sweeps < max_nsweeps
+                app.ViewNextSweep.Enable = 'on';
+            else
+                app.ViewNextSweep.Enable = 'off';
+            end
         end
         
         function ViewAllSweepTickedInitialized(app)
@@ -443,7 +461,7 @@
                 end
             else
                 sweep_selection_choice = 'on';
-                app.ViewSweepSelection.String = '1';
+                app.ViewSweepSelection.Value = '1';
                 app.current_settings.sweeps.selected = 1;
             end
             
@@ -461,6 +479,38 @@
                 ';border-radius:6px;width:18px;height:18px">  </div></body>'];
             
         end
+        
+        function changeViewPlotRatios(app)
+            ax_heights = app.current_settings.plot.height_ratio * (1 - app.axes_bottom_margin - app.axes_top_margin);
+            ax_bottoms = 1 - cumsum(ax_heights) - app.axes_top_margin;
+            arrayfun(@(ax, b,h) set(ax, 'Position', [ax.Position(1),b,ax.Position(3),h]), ...
+                app.ViewAxes, ax_bottoms, ax_heights);
+        end
+        
+        function calculateViewPlotHeightRatio(app, value)
+            num_plots = app.current_settings.plot.num;
+            common_warning_message = ['There was a problem with the height ratio. It was supposed to be ' ...
+                'either "auto", "equal" or a valid numeric vector of length equal to the number of plots. ' ...
+                'Because of this, will fall back to equally spaced subplots.'];
+            auto_mode_on = false; 
+            if strcmpi(value, 'auto') || strcmpi(value, 'equal')
+                auto_mode_on = true;
+                value = ones(1, num_plots);
+            else
+                value = str2num(value); %#ok<ST2NM>
+            end
+            if any(isnan(value)) || isempty(value) || length(value) ~= num_plots
+                app.updateLog('ViewLog', 'WARNING', common_warning_message);
+                value = ones(1, num_plots);
+                auto_mode_on = true;
+                app.ViewPlotHeightRatio.Value = 'auto'; 
+            end
+            value = value/sum(value);
+            app.current_settings.plot.height_ratio = value;
+            if ~auto_mode_on
+                app.ViewPlotHeightRatio.Value = vec2str(value, '%.2f', ''); 
+            end
+        end
     end
     
     
@@ -471,10 +521,8 @@
 
         % Code that executes after component creation
         function startupFcn(app)
-            app.MainFigure.WindowState = 'normal'; 
+            app.MainFigure.WindowState = 'normal';
             pause(0.01);
-%             app.MainFigure.Resize = 'off'; 
-%             app.MainFigure.SizeChangedFcn = ''; 
         end
 
         % Button pushed function: LoadDataButton
@@ -604,6 +652,19 @@
             num_sweeps = app.current_data.num_sweeps;
             app.current_settings.sweeps.max = num_sweeps;
             
+            % ViewProtocolPanel updates
+            if selected_protocol_value < length(app.current_settings.available_protocols)
+                app.ViewNextProtocol.Enable = 'on';
+            else
+                app.ViewNextProtocol.Enable = 'off';
+            end
+            
+            if selected_protocol_value > 1
+                app.ViewPreviousProtocol.Enable = 'on';
+            else
+                app.ViewPreviousProtocol.Enable = 'off';
+            end
+            
             % ViewAllSweep turned on automatically
             app.ViewAllSweep.Enable = 'on';
             app.ViewAllSweep.Value = 1;
@@ -627,7 +688,7 @@
             app.ViewPlotNumberChanged;
             
             % ViewVariableProperties
-            viewvarprops_children = app.ViewVariablePropertiesPanel.Children; 
+            viewvarprops_children = app.ViewVariablePropertiesPanel.Children;
             set(viewvarprops_children(isprop(viewvarprops_children,'Enable')), 'Enable', 'on');
             app.ViewVariableOrignalName.Items = var_names;
             app.ViewVariableOrignalName.ItemsData = 1:length(var_names);
@@ -649,33 +710,32 @@
 
         % Value changed function: ViewPlotNumber
         function ViewPlotNumberChanged(app, event)
-            value = app.ViewPlotNumber.Value;
-            app.current_settings.plot.num = value;
-            turn_ons = 1:value;
-            turn_off = (value+1):app.view_max_numplots;
+            num_plots = app.ViewPlotNumber.Value;
+            app.current_settings.plot.num = num_plots;
+            turn_ons = 1:num_plots;
+            turn_off = (num_plots+1):app.view_max_numplots;
             
-            arrayfun(@(x) set(x, 'Enable', 'on'), app.ViewVariableGrid.Children(turn_ons));
-            arrayfun(@(x) set(x, 'Enable', 'off'), app.ViewVariableGrid.Children(turn_off));
+            set(app.ViewVariableGrid.Children(turn_ons), 'Enable', 'on');
+            set(app.ViewVariableGrid.Children(turn_off), 'Enable', 'off');
+            
+            
+            if length(app.ViewAxes) == num_plots, return; end
+            
+            plot_height_ratios = app.ViewPlotHeightRatio.Value;
+            if ~(strcmpi(plot_height_ratios, 'auto') || strcmpi(plot_height_ratios, 'equal'))
+                app.updateLog('ViewLog', 'WARNING', ['Since you changed the number of plots with ' ...
+                    'customized height ratios for plots, the height ratio mode will go back to "auto".']);
+                app.ViewPlotHeightRatio.Value = 'auto';
+                app.calculateViewPlotHeightRatio('auto');
+            end
+            app.plotViewAxes;
         end
 
         % Value changed function: ViewPlotHeightRatio
         function ViewPlotHeightRatioChanged(app, event)
             value = app.ViewPlotHeightRatio.Value;
-            num_plots = app.current_settings.plot.num;
-            common_warning_message = ['There was a problem with the height ratio. It was supposed to be ' ...
-                'either "auto", "equal" or a valid numeric vector of length equal to the number of plots. ' ...
-                'Because of this, will fall back to equally spaced subplots.'];
-            if strcmpi(value, 'auto') || strcmpi(value, 'equal')
-                value = ones(1, num_plots);
-            else
-                value = str2num(value); %#ok<ST2NM>
-            end
-            if any(isnan(value)) || isempty(value) || length(vale) ~= num_plots
-                app.updateLog('ViewLog', 'WARNING', common_warning_message)
-            end
-            value = value/sum(value);
-            app.current_settings.plot.height_ratio = value;
-            % TODO: continue
+            app.calculateViewPlotHeightRatio(value);
+            app.changeViewPlotRatios;
         end
 
         % Value changed function: ViewVariableOrignalName
@@ -703,6 +763,125 @@
             app.ViewVariableYLimUpperBound.Enable = value_mode;
             
             % TODO: implement YLim changes
+        end
+
+        % Value changed function: ViewShowAllXAxis
+        function ViewShowAllXAxisChanged(app, event)
+            
+            if length(app.ViewAxes) < 2, return; end
+            x_color = 'k';
+            if app.ViewShowAllXAxis.Value == 0, x_color = 'none'; end
+            
+            arrayfun(@(ax) set(ax, 'xcolor', x_color), app.ViewAxes(1:end-1));
+        end
+
+        % Button pushed function: ViewProtocolNameChanger
+        function ViewProtocolNameChangerPushed(app, event)
+            selected_protocol_value = app.ViewProtocolSelection.Value;
+            app.current_settings.protocol.value = selected_protocol_value;
+            app.current_settings.protocol.name = app.current_settings.available_protocols{selected_protocol_value};
+            
+            new_protocol_name = inputdlg(sprintf('Change "%s" to:', app.current_settings.protocol.name), ...
+                'Change protocol name', [1.5, 35]);
+            
+            if isempty(new_protocol_name), return; end
+            new_protocol_name = new_protocol_name{1};
+            app.current_settings.available_protocols{selected_protocol_value} = new_protocol_name;
+            app.current_settings.protocol.name = new_protocol_name;
+            app.ViewProtocolSelection.Items{selected_protocol_value} = ...
+                sprintf('%02d: %s', selected_protocol_value, new_protocol_name);
+        end
+
+        % Button pushed function: ViewNextProtocol
+        function ViewNextProtocolPushed(app, event)
+            selected_protocol_value = app.ViewProtocolSelection.Value;
+            if selected_protocol_value < length(app.current_settings.available_protocols)
+                app.ViewProtocolSelection.Value = selected_protocol_value + 1;
+                app.ViewProtocolSelectionChanged;
+            else
+                app.ViewNextProtocol.Enable = 'off';
+            end
+        end
+
+        % Button pushed function: ViewPreviousProtocol
+        function ViewPreviousProtocolPushed(app, event)
+            selected_protocol_value = app.ViewProtocolSelection.Value;
+            if selected_protocol_value > 1
+                app.ViewProtocolSelection.Value = selected_protocol_value - 1;
+                app.ViewProtocolSelectionChanged;
+            else
+                app.ViewPreviousProtocol.Enable = 'off';
+            end
+            
+        end
+
+        % Value changed function: ViewSweepSelection
+        function ViewSweepSelectionChanged(app, event)
+            og_inputs = str2num(app.ViewSweepSelection.Value); %#ok
+            input_vals = unique(og_inputs);
+            
+            if isempty(input_vals) || any(isnan(input_vals))
+                app.updateLog('ViewLog', 'WARNING', ['The inputs for sweep indices cannot be resolved numerically.' ...
+                    ' Please enter a MATLAB vector or scalar!']);
+                app.ViewSweepSelection.Value = vec2str(app.current_settings.sweep.selected, '%d', '');
+                return;
+            end
+            
+            if any(input_vals ~= ceil(input_vals))
+                input_vals = ceil(input_vals);
+                app.updateLog('ViewLog', 'WARNING', 'You entered some invalid input for indices. Will use CEIL to correct.');
+            end
+            max_nsweeps = app.current_settings.sweeps.max;
+            if max(input_vals) > max_nsweeps || min(input_vals) < 1
+                app.updateLog('ViewLog', 'WARNING', sprintf(['The input sweep indices need to be from 1-%d,' ...
+                    ' will rid of anything outside of this range'], max_nsweeps));
+                input_vals(input_vals < 1 | input_vals > max_nsweeps) = [];
+            end
+            
+            if length(input_vals) < length(og_inputs)
+                app.ViewSweepSelection.Value = vec2str(input_vals, '%d', '');
+            end
+            
+            sweep_buttons_show = 'on';
+            if length(input_vals) > 1, sweep_buttons_show = 'off'; end
+            app.ViewNextSweep.Enable = sweep_buttons_show;
+            app.ViewPreviousSweep.Enable = sweep_buttons_show;
+            
+            app.current_settings.sweeps.selected = input_vals;
+            
+            app.showOnlySelectedSweep;
+            
+        end
+
+        % Button pushed function: ViewNextSweep
+        function ViewNextSweepPushed(app, event)
+            selected_sweep_index = app.current_settings.sweeps.selected;
+            max_nsweeps = app.current_settings.sweeps.max;
+            if length(selected_sweep_index) ~= 1 || any(selected_sweep_index >= max_nsweeps)
+                app.ViewNextSweep.Enable = 'off';
+                return;
+            end
+            
+            selected_sweep_index =  selected_sweep_index + 1;
+            app.ViewSweepSelection.Value = sprintf('%d', selected_sweep_index);
+            app.current_settings.sweeps.selected = selected_sweep_index;
+            
+            app.showOnlySelectedSweep;
+        end
+
+        % Button pushed function: ViewPreviousSweep
+        function ViewPreviousSweepPushed(app, event)
+            selected_sweep_index = app.current_settings.sweeps.selected;
+            if length(selected_sweep_index) ~= 1 || any(selected_sweep_index <= 1)
+                app.ViewPreviousSweep.Enable = 'off';
+                return;
+            end
+            
+            selected_sweep_index =  selected_sweep_index - 1;
+            app.ViewSweepSelection.Value = sprintf('%d', selected_sweep_index);
+            app.current_settings.sweeps.selected = selected_sweep_index;
+            
+            app.showOnlySelectedSweep;
         end
 
         % Changes arrangement of the app based on UIFigure width
@@ -883,6 +1062,7 @@
 
             % Create ViewProtocolNameChanger
             app.ViewProtocolNameChanger = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewProtocolNameChanger.ButtonPushedFcn = createCallbackFcn(app, @ViewProtocolNameChangerPushed, true);
             app.ViewProtocolNameChanger.Enable = 'off';
             app.ViewProtocolNameChanger.Tooltip = {'Click here to change the name of the protocol'};
             app.ViewProtocolNameChanger.Position = [220 38 35 22];
@@ -890,6 +1070,7 @@
 
             % Create ViewPreviousProtocol
             app.ViewPreviousProtocol = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewPreviousProtocol.ButtonPushedFcn = createCallbackFcn(app, @ViewPreviousProtocolPushed, true);
             app.ViewPreviousProtocol.IconAlignment = 'center';
             app.ViewPreviousProtocol.FontSize = 14;
             app.ViewPreviousProtocol.Enable = 'off';
@@ -899,6 +1080,7 @@
 
             % Create ViewNextProtocol
             app.ViewNextProtocol = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewNextProtocol.ButtonPushedFcn = createCallbackFcn(app, @ViewNextProtocolPushed, true);
             app.ViewNextProtocol.IconAlignment = 'center';
             app.ViewNextProtocol.FontSize = 14;
             app.ViewNextProtocol.Enable = 'off';
@@ -914,6 +1096,7 @@
 
             % Create ViewSweepSelection
             app.ViewSweepSelection = uieditfield(app.ViewProtocolAndSweepPanel, 'text');
+            app.ViewSweepSelection.ValueChangedFcn = createCallbackFcn(app, @ViewSweepSelectionChanged, true);
             app.ViewSweepSelection.Enable = 'off';
             app.ViewSweepSelection.Position = [63 10 145 22];
 
@@ -927,6 +1110,7 @@
 
             % Create ViewPreviousSweep
             app.ViewPreviousSweep = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewPreviousSweep.ButtonPushedFcn = createCallbackFcn(app, @ViewPreviousSweepPushed, true);
             app.ViewPreviousSweep.IconAlignment = 'center';
             app.ViewPreviousSweep.FontSize = 14;
             app.ViewPreviousSweep.Enable = 'off';
@@ -936,6 +1120,7 @@
 
             % Create ViewNextSweep
             app.ViewNextSweep = uibutton(app.ViewProtocolAndSweepPanel, 'push');
+            app.ViewNextSweep.ButtonPushedFcn = createCallbackFcn(app, @ViewNextSweepPushed, true);
             app.ViewNextSweep.IconAlignment = 'center';
             app.ViewNextSweep.FontSize = 14;
             app.ViewNextSweep.Enable = 'off';
@@ -1149,6 +1334,7 @@
 
             % Create ViewShowAllXAxis
             app.ViewShowAllXAxis = uibutton(app.ViewXAxispropertiesPanel, 'state');
+            app.ViewShowAllXAxis.ValueChangedFcn = createCallbackFcn(app, @ViewShowAllXAxisChanged, true);
             app.ViewShowAllXAxis.Enable = 'off';
             app.ViewShowAllXAxis.Text = 'Show all X-axis';
             app.ViewShowAllXAxis.Position = [7 66 100 22];
@@ -1255,7 +1441,6 @@
 
             % Create ViewFigureBoundary
             app.ViewFigureBoundary = uipanel(app.ViewOutputsTab);
-            app.ViewFigureBoundary.AutoResizeChildren = 'off';
             app.ViewFigureBoundary.BackgroundColor = [1 1 1];
             app.ViewFigureBoundary.Position = [19 14 890 739];
 

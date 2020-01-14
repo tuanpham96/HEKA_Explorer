@@ -1,6 +1,9 @@
-function s = vec2str(v,fmt)
-if nargin == 1, fmt = '%.1f'; end 
-delim = ', '; 
+function s = vec2str(v,fmt,brckt,delim)
+if ~exist('fmt', 'var'), fmt = '%.1f'; end
+if ~exist('brckt', 'var'), brckt = {'[',']'}; end
+if length(brckt) ~= 2 || isempty(brckt),  brckt = {'',''}; end 
+if ~exist('delim', 'var'), delim = ', '; end
+
 s = sprintf([fmt, delim], v); 
-s = ['[', s(1:end-length(delim)), ']']; 
+s = [brckt{1}, s(1:end-length(delim)), brckt{2}]; 
 end
