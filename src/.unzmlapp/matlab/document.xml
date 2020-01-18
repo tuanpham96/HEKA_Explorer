@@ -256,11 +256,11 @@
                     case 'A'
                         chan_unit  = 'nA';
                         chan_datum = chan_datum * 1e9;
-                        chan_ylim = [-4, 0.5];
+                        chan_ylim = 'auto'; % [-4, 0.5];
                     case 'V'
                         chan_unit  = 'mV';
                         chan_datum = chan_datum * 1e3;
-                        chan_ylim = [-90, 60];
+                        chan_ylim = 'auto'; % [-90, 60];
                     otherwise
                         error('%s is not an acceptable channel unit as this point', chan_unit);
                 end
@@ -521,6 +521,11 @@
             end
             
         end
+        
+        function updateViewPlotXLimChanged(app, new_xlim)
+            app.current_settings.xlim = new_xlim;
+            xlim(app.ViewAxes(1), new_xlim);
+        end
     end
     
     
@@ -774,16 +779,19 @@
             app.ViewVariableYLimLowerBound.Enable = value_mode;
             app.ViewVariableYLimUpperBound.Enable = value_mode;
             
-            new_ylim = app.convert_axislim_string2double(app.VariableManipulation_YLimInput);
             selected_ind = app.ViewVariableOrignalName.Value;
             var_id = sprintf('var%d', selected_ind);
             
-            app.updateViewPlotSelectedYLimChanged(var_id, new_ylim);
+            if value == 1
+                new_ylim = 'auto';
+                app.updateViewPlotSelectedYLimChanged(var_id, new_ylim);
+            else
+                app.ViewVariableYlimBoundsChanged;
+            end
         end
 
         % Value changed function: ViewShowAllXAxis
         function ViewShowAllXAxisChanged(app, event)
-            
             if length(app.ViewAxes) < 2, return; end
             x_color = 'k';
             if app.ViewShowAllXAxis.Value == 0, x_color = 'none'; end
@@ -968,6 +976,89 @@
                 app.ViewAxes(ind_plt).YAxis(yaxis_ind_for_color).Color = new_color;
                 set(get(app.ViewAxes(ind_plt), 'children'), 'color', new_color);
             end
+            
+        end
+
+        % Value changed function: ViewVariableYLimLowerBound, 
+        % ViewVariableYLimUpperBound
+        function ViewVariableYlimBoundsChanged(app, event)
+            lowbound = app.ViewVariableYLimLowerBound.Value;
+            uppbound = app.ViewVariableYLimUpperBound.Value;
+            
+            if isempty(lowbound) || isnan(lowbound)
+                lowbound = -Inf;
+                app.ViewVariableYLimLowerBound.Value = -Inf;
+            end
+            
+            if isempty(uppbound) || isnan(uppbound)
+                uppbound = Inf;
+                app.ViewVariableYLimUpperBound.Value = Inf;
+            end
+            
+            new_ylim = [lowbound, uppbound];
+            if lowbound >= uppbound
+                app.updateLog('ViewLog', 'WARNING', ...
+                    ['Your YLim lower bound cannot be >= than your upper bound. ' ...
+                    'Will turn this to [-Inf, Inf].']);
+                
+                app.ViewVariableYLimLowerBound.Value = -Inf;
+                app.ViewVariableYLimUpperBound.Value = Inf;
+                new_ylim = [-Inf, Inf];
+            end
+            
+            selected_ind = app.ViewVariableOrignalName.Value;
+            var_id = sprintf('var%d', selected_ind);
+            
+            app.updateViewPlotSelectedYLimChanged(var_id, new_ylim);
+        end
+
+        % Value changed function: ViewXLimAuto
+        function ViewXLimAutoChanged(app, event)
+            value = app.ViewXLimAuto.Value;
+            value_mode = 'on';
+            if value == 1
+                value_mode = 'off';
+            end
+            
+            app.ViewXLimLowerBound.Enable = value_mode;
+            app.ViewXLimUpperBound.Enable = value_mode;
+            
+            if value == 1
+                new_xlim = 'auto';
+                app.updateViewPlotXLimChanged(new_xlim);
+            else
+                app.ViewXLimBoundsChanged;
+            end
+        end
+
+        % Value changed function: ViewXLimLowerBound, 
+        % ViewXLimUpperBound
+        function ViewXLimBoundsChanged(app, event)
+            lowbound = app.ViewXLimLowerBound.Value;
+            uppbound = app.ViewXLimUpperBound.Value;
+            
+            if isempty(lowbound) || isnan(lowbound)
+                lowbound = -Inf;
+                app.ViewXLimLowerBound.Value = -Inf;
+            end
+            
+            if isempty(uppbound) || isnan(uppbound)
+                uppbound = Inf;
+                app.ViewXLimUpperBound.Value = Inf;
+            end
+            
+            new_xlim = [lowbound, uppbound];
+            if lowbound >= uppbound
+                app.updateLog('ViewLog', 'WARNING', ...
+                    ['Your XLim lower bound cannot be >= than your upper bound. ' ...
+                    'Will turn this to [-Inf, Inf].']);
+                
+                app.ViewXLimLowerBound.Value = -Inf;
+                app.ViewXLimUpperBound.Value = Inf;
+                new_xlim = [-Inf, Inf];
+            end
+            
+            app.updateViewPlotXLimChanged(new_xlim);
             
         end
 
@@ -1402,11 +1493,13 @@
 
             % Create ViewVariableYLimLowerBound
             app.ViewVariableYLimLowerBound = uieditfield(app.ViewVariablePropertiesPanel, 'numeric');
+            app.ViewVariableYLimLowerBound.ValueChangedFcn = createCallbackFcn(app, @ViewVariableYlimBoundsChanged, true);
             app.ViewVariableYLimLowerBound.Enable = 'off';
             app.ViewVariableYLimLowerBound.Position = [232 44 40 22];
 
             % Create ViewVariableYLimUpperBound
             app.ViewVariableYLimUpperBound = uieditfield(app.ViewVariablePropertiesPanel, 'numeric');
+            app.ViewVariableYLimUpperBound.ValueChangedFcn = createCallbackFcn(app, @ViewVariableYlimBoundsChanged, true);
             app.ViewVariableYLimUpperBound.Enable = 'off';
             app.ViewVariableYLimUpperBound.Position = [277 44 40 22];
 
@@ -1446,16 +1539,19 @@
 
             % Create ViewXLimLowerBound
             app.ViewXLimLowerBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
+            app.ViewXLimLowerBound.ValueChangedFcn = createCallbackFcn(app, @ViewXLimBoundsChanged, true);
             app.ViewXLimLowerBound.Enable = 'off';
             app.ViewXLimLowerBound.Position = [22 13 40 22];
 
             % Create ViewXLimUpperBound
             app.ViewXLimUpperBound = uieditfield(app.ViewXAxispropertiesPanel, 'numeric');
+            app.ViewXLimUpperBound.ValueChangedFcn = createCallbackFcn(app, @ViewXLimBoundsChanged, true);
             app.ViewXLimUpperBound.Enable = 'off';
             app.ViewXLimUpperBound.Position = [67 13 40 22];
 
             % Create ViewXLimAuto
             app.ViewXLimAuto = uicheckbox(app.ViewXAxispropertiesPanel);
+            app.ViewXLimAuto.ValueChangedFcn = createCallbackFcn(app, @ViewXLimAutoChanged, true);
             app.ViewXLimAuto.Enable = 'off';
             app.ViewXLimAuto.Text = 'auto';
             app.ViewXLimAuto.FontSize = 10;
